@@ -1,0 +1,899 @@
+#######################################
+		arrayAppend
+ Function arrayAppend appends values on an indexed array
+ Parameters:
+	$1 The name of the array to append
+ $2 First value to appends
+ ... optional more values to append may follow
+
+
+#######################################
+		arrayDelete
+ Function arrayDelete deletes a value from an indexed array
+ Parameters:
+	$1 The name of the array
+ $2 Index to delete
+
+
+#######################################
+		arrayHasKey
+ Function arrayHasKey
+	check is an array has key
+ Parameters:
+	$1 the array name
+	$2 the key value to search must not contain spaces
+ Returns:
+	success(0) - if key exists in array
+	error(1)   -   otherwise
+ Exits:
+	exits if called with wrong number of arguments
+
+
+#######################################
+		arrayInsert
+ Function arrayInsert inserts values into an indexed array
+ Parameters:
+	$1 The name of the array
+ $2 Index where to insert (this element is replaced with the first value to insert)
+ $3 First value to inserts
+ ... optional more elements to insert
+
+
+#######################################
+		checkAllFilesEqual
+ Function checks whether all files are equal
+	and sets the failure condition if one file is missing or differs
+	parameters
+		$1 the prefix #1 (directory) for all files
+		$2 the prefix #2 (directory) for all files
+		$3 the space separated list of files to check
+ Exits:
+	if no called with wrong number of arguments
+ Side Effects_
+	The failure condition is set one file is missing or differs
+
+
+#######################################
+		checkAllFilesExist
+ Function checks whether all files exists
+	and sets the failure condition if one file is missing
+	parameters
+		$1 the prefix for all files
+		$2 the space separated list of files to check
+ Exits:
+	if no called with wrong number of arguments
+ Side Effects_
+	The failure condition is set one file is missing
+
+
+#######################################
+		checkLineCount
+ Function checks whether the line count in a file equals a specific number
+	and sets the failure condition if the count differs
+	parameters
+		$1 the file name
+		$2 the expected line count
+ Exits:
+	if no called with wrong number of arguments
+ Side Effects_
+	The failure condition is set if the line count is not the expected or the file does not exists
+
+
+#######################################
+		checkTokenIsInDirs
+ Function checkTokenIsInDirs
+	Check if a token is in files in directories
+ Parameters:
+	$1 - if true, the function exits if no files are scanned
+	$2 - the token to find
+	$3 - the file wildcard
+	$4 - the space separated list of directories to check
+ Returns:
+	true
+	Set failure if the token wa not in one of the input directories
+ Exits:
+	if called with wrong params
+	a file is not readable
+if no files are scanned and $3 was true
+
+
+#######################################
+		checkTokenIsInFiles
+ Function checkTokenIsInFiles
+	Check if a token is in one of these files
+ Parameters:
+	$1 - if true, the function exits if no files are scanned
+	$2 - the token to find
+	$3... the list of files to check
+ Returns:
+	true
+	Set failure if token was not found
+ Exits:
+	if called with wrong params
+	a file is not readable
+	if no files are scanned and $2 was true
+
+
+#######################################
+		checkTokenIsNotInDirs
+ Function checkTokenIsNotInDirs
+	Check if a token is not in files in directories
+ Parameters:
+	$1 - if true, the function exits if no files are scanned
+	$2 - the token to find
+	$3 - the file wildcard
+	$4 - the space separated list of directories to check
+ Returns:
+	true
+	Set failure if the token was in on of the files in directories
+ Exits:
+	if called with wrong params
+	a file is not readable
+if no files are scanned and $3 was true
+
+
+#######################################
+		checkTokenIsNotInFiles
+ Function checkTokenIsNotInFiles
+	Check if a token is not in one of these files
+ Parameters:
+	$1 - if true, the function exits if no files are scanned
+	$2 - the token to find
+	$3... the list of files to check
+ Returns:
+	true
+	Set failure if token was found in one of the files
+ Exits:
+	if called with wrong params
+	a file is not readable
+	if no files are scanned and $2 was true
+
+
+#######################################
+		copyAndMorph
+ Function copyAndMorph
+	Copy and change all files from input directory into workdir
+	Filenames that match one of the transformation file name pattern are transformed. All other files are copied.
+	The transformation  of the files is done with function "morphFile"
+	If the variant identifier is empty, the pattern list sould be also empty and the function is a pure copy function
+	If $3 is empty and $4 .. do not exist, this function is a pure copy
+	$1 - input dir
+	$2 - output dir
+	$3 - the variant identifier
+	$4 ... pattern for file names to be transformed
+	returns
+		success(0)
+	exits  if called with wrong arguments
+
+
+#######################################
+		copyAndTransform
+ Function copyAndTransform
+	Copy and change all files from input directory into workdir
+	Filenames that match one of the transformation pattern are transformed. All other files are copied.
+	In case of transformation the pattern //_<varid>_ is removed if varid equals $3
+	In case of transformation the pattern //!<varid>_ is removed if varid is different than $3
+	If the variant identifier is empty, the pattern list sould be also empty and the function is a pure copy function
+	If $3 is empty and $4 .. do not exist, this function is a pure copy
+	$1 - input dir
+	$2 - output dir
+	$3 - the variant identifier
+	$4 ... pattern for file names to be transformed
+	returns
+		success(0)
+	exits  if called with wrong arguments
+
+
+#######################################
+		copyOnly
+ Function copyOnly
+	Copy all files from input directory to workdir
+
+
+#######################################
+		dequote
+ Removes the sorounding quotes
+	and prints result to stdout
+	to be used withg care unquoted whitespaces are removed
+	$1 the value to dequote
+	returns:
+		success (0)
+		error	in exceptional cases
+
+
+#######################################
+		echoAndExecute
+ Function echoAndExecute
+	echo and execute a command with variable arguments
+	success is expected and no further evaluation of the output is required
+ Parameters:
+	$1    - the command string
+	$2 .. - optional the parameters of the command
+ Returns:
+	the result code of the executed command
+ Exits:
+	if no command string is given or the command is empty
+	if the function is not guarded with conditional statement and the executed command returns an error code
+
+
+#######################################
+		echoExecuteAndIntercept
+ Function echoExecuteAndIntercept
+	echo and execute the command line
+	the command execution is guarded and the result code is stored
+ Parameters:
+	$1    - the command string
+	$2 .. - optional the parameters of the command
+ Returns:
+	success
+ Exits:
+	if no command string is given or the command is empty
+ Side Effects:
+	TTTT_result - the result code of the executed command
+
+
+#######################################
+		echoExecuteAndIntercept2
+ Function echoExecuteAndIntercept2
+	echo and execute the command line
+	additionally the expected returncode is checked
+	if the expected result is not received the failure condition is set
+	the function returns success(0)
+	the function exits if an input parameter is wrong
+ Parameters:
+	$1 success - returncode 0 expected
+	   error   - returncode ne 0 expected
+	   X       - any return value is accepted
+	   number  - the numeric return code is expected
+	$2 - the command string
+	$3 .. - optional the parameters for the command
+ Returns:
+	success
+ Exits:
+	If the number of parameters is -lt 2 ot the command is empty
+ Side Effects:
+#
+
+
+#######################################
+		echoExecuteInterceptAndError
+ Function echoExecuteInterceptAndError
+	echo and execute the command line
+	a failure code is expected in the command return
+	the failure condition is set in case of cmd success
+ Parameters:
+	$1    - the command string
+	$2 .. - optionally the parameters of the command
+ Returns:
+	success
+ Exits:
+	if no command string is given or the command is empty
+ Side Effects_
+	TTTT_result - the result code of the executed command
+	The failure condition is set if the command returns success
+
+
+#######################################
+		echoExecuteInterceptAndSuccess
+ Function echoExecuteInterceptAndSuccess
+	echo and execute the command line
+	a successfull command execution is expected
+	the failure condition is set in case of failure
+ Parameters:
+	$1    - the command string
+	$2 .. - optional the parameters of the command
+ Returns
+	success
+ Exits:
+	if no command string is given or the command is empty
+ Side Effects:
+	TTTT_result - the result code of the executed command
+	The failure condition is set if the command returns failure
+
+
+#######################################
+		executeAndLog
+ Function executeAndLog
+	echo and execute a command
+	the command execution is guarded and the result code is stored
+	the std- and error-out is logged into a file for further evaluation
+ Parameters:
+	$1    - the command string
+	$2 .. - optional the parameters of the command
+	$TT_evaluationFile - the file name of the log file default is ./EVALUATION.log
+ Returns:
+	success
+ Exits:
+	if no command string is given or the command is empty
+ Side Effects:
+	TTTT_result - the result code of the executed command
+
+
+#######################################
+		executeLogAndError
+ Function executeLogAndError
+	echo and execute a command
+	the command execution is guarded and the result code is stored
+	the std- and error-out is logged into a file for further evaluation
+	an error command execution is expected, otherwise the failure condition is set
+ Parameters:
+	$1    - the command string
+	$2 .. - optional the parameters of the command
+	$TT_evaluationFile - the file name of the log file default is ./EVALUATION.log
+ Returns:
+	success
+ Exits:
+	if no command string is given or the command is empty
+ Side Effects:
+	TTTT_result - the result code of the executed command
+	The failure condition is set if the command returns success
+
+
+#######################################
+		executeLogAndSuccess
+ Function executeLogAndSuccess
+	echo and execute a command
+	the command execution is guarded and the result code is stored
+	the std- and error-out is logged into a file for further evaluation
+	a successfull command execution is expected, otherwise the failure condition is set
+ Parameters:
+	$1    - the command string
+	$2 .. - optional the parameters of the command
+	$TT_evaluationFile - the file name of the log file default is ./EVALUATION.log
+ Returns:
+	success
+ Exits:
+	if no command string is given or the command is empty
+ Side Effects:
+	TTTT_result - the result code of the executed command
+	The failure condition is set if the command returns failure
+
+
+#######################################
+		findTokenInDirs
+ Function findTokenInDirs
+	Find a token in files in a number of directories
+ Parameters:
+	$1 - if true, the function exits if no files are scanned
+	$2 - the token to find
+	$3 - the file wildcard
+	$4 - the space separated list of directories to check
+ Returns:
+	true - if token found
+	false - otherwise
+ Exits:
+	if called with wrong params
+	a file is not readable
+if no files are scanned and $3 was true
+
+
+#######################################
+		findTokenInFiles
+ Function findTokenInFiles
+	Find a token in files
+ Parameters:
+	$1 - if true, the function exits if no files are scanned
+	$2 - the token to find
+	$3... the list of files to check
+ Returns:
+	true - if token found
+	false - otherwise
+ Exits:
+	if called with wrong params
+	a file is not readable
+	if no files are scanned and $2 was true
+
+
+#######################################
+		getElapsedTime
+ Function get the elapsed time string in TTTT_elapsedTime
+	parameters
+		$1 the start time in seconds
+	return
+		TTTT_elapsedTime
+
+
+#######################################
+		getLineCount
+ Function getLineCount
+	Get the number of lines in a file
+ Parameters:
+	$1 the file name
+ Returns:
+	the status of the ececuted commands
+ Exits:
+ if the function was called with invalid parameters
+ Side Effects:
+	TTTT_lineCount - the number of lines in the file
+
+
+#######################################
+		getSystemLoad
+ Function get the current system load
+	returns the load value in TTTT_systemLoad
+
+
+#######################################
+		getSystemLoad100
+ Function get the current system load as integer
+	system load x 100
+	returns the load value in TTTT_systemLoad100
+
+
+#######################################
+		import
+ Function import
+	Treats the input as filename and adds it to TT_tools if not already there
+	sources the file if it was not in TT_tools
+	return the result code of the source command
+
+
+#######################################
+		isArray
+ Function isArray
+	checks whether an variable exists and is an indexed array
+ Parameters:
+	$1 - var name to be checked
+ Returns
+	success(0) - if the variable exists and is an indexed array
+	error(1)   -  otherwise
+ Exits:
+	if called without argument
+
+
+#######################################
+		isAssociativeArray
+ Function isAssociativeArray
+	checks whether an variable exists and is an associative array
+ Parameters:
+	$1 - var name to be checked
+ Returns
+	success(0) - if the variable exists and is an indexed array
+	error(1)   - otherwise
+ Exits:
+	if called without argument
+
+
+#######################################
+		isDebug
+ Function isDebug
+ 	returns:
+		success(0) if debug is enabled
+		error(1)   otherwise 
+
+
+#######################################
+		isExisting
+ Function isExisting
+	check if variable exists
+ Parameters:
+	$1 - variable name to be checked
+ Returns:
+		success(0)    if the variable exists
+		error(1)      otherwise
+ Exits
+	if called without argument
+
+
+#######################################
+		isExistingAndFalse
+ Function isExistingAndFalse
+	check if variable exists and has an empty value
+ Parameters:
+	$1 - var name to be checked
+ Returns
+	success(0) - exists and has an empty value
+	error(1)   - otherwise
+ Exits
+	if called without argument
+
+
+#######################################
+		isExistingAndTrue
+ Function isExistingAndTrue
+	check if variable exists and has a non empty value
+ Parameters:
+	$1 - var name to be checked
+ Returns
+	success(0) - the variable exists and has a non empty value
+	error(1)   - otherwise
+ Exits
+	if called without argument
+
+
+#######################################
+		isFalse
+ Function isFalse
+	check if a variable has an empty value
+ Parameters:
+	$1 - var name to be checked
+ Returns
+	success(0)  - if the variable exists and has a empty value
+	error(1)    - if the variable exists and has an non empty value
+ Exits:
+	if variable not exists
+	if called without argument
+
+
+#######################################
+		isFunction
+ Function isFunction
+	checks whether an given name is defined as function
+ Parameters:
+	$1 - name to be checked
+ Returns:
+	success(0)  - if the function exists
+	error(1)    - otherwise
+ Exits:
+	if called without argument
+
+
+#######################################
+		isInList
+ check whether the pattern $1 matches one of the tokens in a space separated list of tokens
+	$1 the pattern to search. It must not contain whitespaces
+	$2 the space separated list of tokens
+	returns true if the token was in the list; false otherwise
+	exits if called with wrong parameters
+
+
+#######################################
+		isInListSeparator
+ check whether a token is in a list of tokens with a special separator
+	$1 the token to search. It must not contain any of the separator tokens
+	$2 the list
+	$3 the separators
+	returns true if the token was in the list; false otherwise
+	exits if called with wrong parameters
+
+
+#######################################
+		isInPatternList
+ check whether the token $1 matches one of the pattern in a space separated list of patterns
+	$1 the token to search. It must not contain whitespaces
+	$2 the space separated list of patterns
+	returns true if the token was in the list; false otherwise
+	exits if called with wrong parameters
+
+
+#######################################
+		isNotExisting
+ Function isNotExisting
+	check if variable not exists
+ Parameters:
+	$1 - variable name to be checked
+ Returns:
+	success(0) - if the variable not exists
+	error(1)   -   otherwise
+ Exits
+	if called without argument
+
+
+#######################################
+		isNumber
+ Checks whether the input string is a signed or unsigned number ([-+])[0-9]+
+ $1 the string to check
+ returns
+	success(0)  if the input is a number
+	error(1)    otherwise
+
+
+#######################################
+		isPureNumber
+ Checks whether the input string is a ubsigned number [0-9]+
+ $1 the string to check
+ returns
+	success(0)  if the input are digits only
+	error(1)    otherwise
+
+
+#######################################
+		isTrue
+ Function isTrue
+	check if a variable has a non empty value
+ Parameters:
+	$1 - var name to be checked
+ Returns
+	success(0) - variable exists and has a non empty value
+	error(1)   - variable exists and has a empty value
+ Exits:
+	if variable not exists
+	if called without argument
+
+
+#######################################
+		isVerbose
+ Function isVerbose
+	returns
+		success(0) if debug is enabled
+		error(1)   otherwise 
+
+
+#######################################
+		linewisePatternMatch
+ Function linewisePatternMatch
+	Line pattern validator
+	$1 - the input file
+	$2 - if set to "true" all pattern must generate a match
+	$3 .. - the pattern to match
+	returns
+		success(0)   if file exist and one patten matches (if $2 is false)
+		             if file exist and all patten matche  (if $2 is true)
+	return false if no complete pattern match was found or the file not exists
+
+
+#######################################
+		linewisePatternMatchAndIntercept
+ Function linewisePatternMatchAndIntercept
+	Execute the function linewisePatternMatch guarded and return the result code in TTTT_result
+	Line pattern validator
+	$1 - the input file
+	$2 - if set to "true" all pattern must generate a match
+	$3 .. - the pattern to match
+	returns succes
+	and the result code from linewisePatternMatch in TTTT_result
+
+
+#######################################
+		linewisePatternMatchArray
+ Function linewisePatternMatchArray
+	Line pattern validator with array input variable
+	the pattern to match as array 0..n are expected to be in TTTT_patternList array variable
+	$1 - the input file
+	$2 - if set to "true" all pattern must generate a match
+	$TTTT_patternList the indexed array with the pattern to search
+		success(0)   if file exist and one patten matches (if $2 is false)
+		             if file exist and all patten matche  (if $2 is true)
+	return false if no complete pattern match was found or the file not exists
+	exits if TTTT_patternList is empty or not existent
+
+
+#######################################
+		linewisePatternMatchInterceptAndError
+ Function linewisePatternMatchInterceptAndError
+	Execute the function linewisePatternMatch guarded and return the result code in TTTT_result
+	Expect failure (no match found), set failure otherwise
+	Line pattern validator
+	$1 - the input file
+	$2 - if set to "true" all pattern must generate a match
+	$3 .. - the pattern to match
+	returns
+	and the result code from linewisePatternMatch in TTTT_result
+
+
+#######################################
+		linewisePatternMatchInterceptAndSuccess
+ Function linewisePatternMatchInterceptAndSuccess
+	Execute the function linewisePatternMatch guarded and return the result code in TTTT_result
+	Expect success (match found), set failure otherwise
+	Line pattern validator
+	$1 - the input file
+	$2 - if set to "true" all pattern must generate a match
+	$3 .. - the pattern to match
+	returns
+	and the result code from linewisePatternMatch in TTTT_result
+
+
+#######################################
+		morphFile
+ morphes a file
+	Lines like:
+	^[[:space:]]*//<varid1 varid2..> are effective if the argument $3 equal one of the varid1, or varid2..
+	^[[:space:]]*//<!varid1 varid2..> are not effective if the argument $3 equal one of the varid1, or varid2..
+	and patterns like <#$varname#> are replaced with the expansion of $varname
+	Effective means that the pattern //<varid1 varid2..> or //<!varid1 varid2..> is removed
+	$1 - input file
+	$2 - output file
+	$3 - the variant identifier
+	returns
+		success(0)
+	exits  if called with wrong arguments
+
+
+#######################################
+		printDebug
+ Function printDebug
+	prints debug info
+	$1 the debug info to print
+	returns:
+		success (0)
+		error	in exceptional cases
+
+
+#######################################
+		printDebugn
+ Function printDebugn
+	prints debug info without newline
+	$1 the debug info to print
+	returns:
+		success (0)
+		error	in exceptional cases
+
+
+#######################################
+		printError
+ Function printError
+	prints an error message
+	$1 the error message to print
+	returns:
+		success (0)
+		error	in exceptional cases
+
+
+#######################################
+		printErrorAndExit
+ Function printErrorAndExit
+ 	prints an error message and exits
+	$1 the error message to print
+	$2 optional exit code, default is 60
+	returns: never
+
+
+#######################################
+		printInfo
+ Function printInfo
+	prints info info
+	$1 the info to print
+	returns:
+		success (0)
+		error	in exceptional cases
+
+
+#######################################
+		printInfon
+ Function printInfon
+	prints info info without newline
+	$1 the info to print
+	returns:
+		success (0)
+		error	in exceptional cases
+
+
+#######################################
+		printTestframeEnvironment
+ Function printTestframeEnvironment
+ 	print special testrame environment
+	returns:
+		success (0)
+		error	in exceptional cases
+
+
+#######################################
+		printVerbose
+ Function printVerbose
+	prints verbose info
+	$1 the info to print
+	returns:
+		success (0)
+		error	in exceptional cases
+
+
+#######################################
+		printVerbosen
+ Function printVerbosen
+	prints verbose info without newline
+	$1 the info to print
+	returns:
+		success (0)
+		error	in exceptional cases
+
+
+#######################################
+		printWarning
+ Function printWarning
+	prints an warning message
+	$1 the warning to print
+	returns:
+		success (0)
+		error	in exceptional cases
+
+
+#######################################
+		promptYesNo
+ Function promptYesNo
+	Write prompt and wait for user input y/n
+	optional $1 the text for the prompt
+	honors TTRO_noPrompt
+	returns
+		success(0) if y/Y was enterd
+		error(1) if n/N was entered
+	exits id ^C was pressed
+
+
+#######################################
+		renameInSubdirs
+ Function renameInSubdirs
+	Renames a special file name in all base directory and in all sub directories
+	$1 the base directory
+	$2 the source filename
+	$3 the destination filename
+
+
+#######################################
+		setCategory
+ Function setCategory
+	set the assigned categories of a test case or suite
+	Use this function in initialization phase of case or suite only
+	If this function is not used, a
+		suite has no category assigned
+		a case has the category "default"
+	If this function is called with no parameters, the list
+	with the assigned categories becomes the empty list.
+	$1 ... the category identifieres of this atrifact
+
+
+#######################################
+		setFailure
+ Function setFailure
+	set the user defined failure condition in a test case script
+	to be used in failed test case steps only
+ Parameters:
+	$1 - the user defined failure text
+ Returns:
+	success
+ Exits:
+	if called from a test suite script
+	if called with empty argument $1
+
+
+#######################################
+		setSkip
+ Function setSkip
+	set the skip condition TTPRN_skip in initialization phase of case or suite
+	use the supplied value or unspecified
+ Params:
+	$1 - optional the reason to skip this value must not be empty
+ Returns:
+	success
+ Exits:
+	if called in another phase than initializing
+	if called with empty argument $1
+
+
+#######################################
+		setVar
+ Function setVar
+	Set framework variable or property at runtime
+	The name of the variable must startg with TT_, TTRO_, TTPR_ or TTPRN_
+ Parameters:
+	$1 - the name of the variable to set
+	$2 - the value
+ Returns
+	success (0) - if the variable could be set or if an property value is ignored
+ Exits:
+	if variable is not of type TT_, TTRO_, TTPR_ or TTPRN_
+	or if the variable could not be set (e.g a readonly variable was already set
+	ignored property values do not generate an error
+
+
+#######################################
+		timeFromSeconds
+ Function timeFromSeconds
+	returns a formated string hh:mm:ss from seconds
+	parameters
+		$1   input in seconds
+	return
+		TTTT_timeFromSeconds the formated string
+		success
+
+
+#######################################
+		trim
+ Function trim removes leading and trailing whitespace characters
+	$1	the input string
+	returns the result string in TTTT_trim
+
+
+#######################################
+		waitForFileToAppear
+ Function waitForFileToAppear
+	Wait until a file appears
+ Parameters:
+	$1 - the file name to check
+	$2 - optional the check interval default is 3 sec.
+ Returns:
+	success if the file was found
+ Exits:
+ if the function was called with invalid parameters
+
+
