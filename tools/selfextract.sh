@@ -101,6 +101,10 @@ if [[ $destination != /* ]]; then
 fi
 
 versiondir="v$major.$minor"
+installdir="${destination}/${versiondir}"
+bindir="${installdir}/bin"
+sampledir="${installdir}/samples"
+
 tempdir="${destination}/tmp/${versiondir}"
 
 #Determine the line with the archive marker
@@ -124,7 +128,9 @@ mkdir -p ${tempdir}
 tail -n+${archiveline} "${0}" | tar xpJv -C ${tempdir}
 
 #create target folder
+mkdir -p $installdir
 mkdir -p ${bindir}
+mkdir -p ${sampledir}
 #remove old links
 rm -f "${destination}/bin/runBTF"
 rm -f "${destination}/bin/runBTF$major"

@@ -5,15 +5,7 @@ set -o errexit; set -o nounset;
 source bin/version.sh
 
 declare -r releasedir='releases'
-declare -r docdir='doc'
-
-#environment check
-if ! declare -p STREAMS_INSTALL > /dev/null; then
-	echo "Missing environment: STREAMS_INSTALL must be set" >&2
-	exit 1
-fi
-declare -r mt="${STREAMS_INSTALL}/bin/spl-make-toolkit"
-declare -r md="${STREAMS_INSTALL}/bin/spl-make-doc"
+declare -r docdir='docs'
 
 echo
 echo "Build release package version v$TTRO_version"
@@ -38,36 +30,18 @@ if [[ $commitstatus ]]; then
 	fi
 fi
 
-#toolkit
-$mt -c -i streamsx.testframe
-$mt -i streamsx.testframe
-rm -rf streamsx.testframe/doc
-rm -rf "$docdir"
-
 mkdir -p "$docdir"
-#doc in release bundle
-$md -i streamsx.testframe --include-all --doc-title "Test Toolkit streamsx.testframe" --author joergboe --warn-no-comments
-#doc for gh pages
-$md -i streamsx.testframe --include-all --doc-title "Test Toolkit streamsx.testframe" --author joergboe --warn-no-comments --output-directory "$docdir/spldoc.tmp"
-
 cd bin
-./runBTF --man | grep -v '===' > "../$docdir/manpage.md.tmp"
-./runBTF --ref '' > ../doc/utils.txt.tmp0
-./runBTF --ref ./streamsutils.sh > ../doc/streamsutils.txt.tmp0
+./runBTF --man | grep -v '===' > "../${docdir}/manpage.md"
+./runBTF --ref '' > ../${docdir}/utils.txt.tmp
 while read -r; do
 	if [[ $REPLY =~ \#[[:space:]] ]]; then
 		echo "${REPLY:1}"
 	else
 		echo "$REPLY"
 	fi;
-done < ../doc/utils.txt.tmp0 > ../doc/utils.txt.tmp 
-while read -r; do
-	if [[ $REPLY =~ \#[[:space:]] ]]; then
-		echo "${REPLY:1}"
-	else
-		echo "$REPLY"
-	fi;
-done < ../doc/streamsutils.txt.tmp0 > ../doc/streamsutils.txt.tmp 
+done < ../${docdir}/utils.txt.tmp > ../${docdir}/utils.txt
+rm ../${docdir}/utils.txt.tmp
 cd -
 
 commithash=$(git rev-parse HEAD)
@@ -78,7 +52,7 @@ mkdir -p "$releasedir"
 
 fname="testframeInstaller_v${TTRO_version}.sh"
 
-tar cvJf "$releasedir/tmp.tar.xz" --exclude=.apt_generated --exclude=.toolkitList --exclude=.gitignore bin samples streamsx.testframe README.md RELEASE.INFO
+tar cvJf "$releasedir/tmp.tar.xz" --exclude=.apt_generated --exclude=.toolkitList --exclude=.gitignore bin samples README.md RELEASE.INFO
 
 cat tools/selfextract.sh releases/tmp.tar.xz > "$releasedir/$fname"
 
