@@ -1,0 +1,748 @@
+#!/bin/bash
+
+#some setup to be save
+IFS=$' \t\n'
+#some recomended security settings
+unset -f unalias
+\unalias -a
+unset -f command
+#more setting to be save
+set -o posix;
+set -o errexit; set -o errtrace; set -o nounset; set -o pipefail
+shopt -s globstar nullglob
+
+#------------------------------------------------------
+# get the current directory and write it to currentDir
+declare -r currentDir=$(pwd)
+
+#------------------------------------------------------
+#get the scripts path and write it into scriptsDir
+#realpath is not available in rhel6
+if [[ -h $0 ]]; then
+	declare -r realCommand=$(readlink -e "$0")
+	declare -r TTTI_commandname="${realCommand##*/}"
+	declare -r TTRO_scriptDir="${realCommand%/*}"
+else
+	tmp="${0%/*}"
+	cd "$tmp"
+	declare -r TTRO_scriptDir=$(pwd)
+	cd "${currentDir}"
+	declare -r TTTI_commandname="${0##*/}"
+fi
+
+#---------------------------------------------------
+#include the utils define the preliminary trace vars
+source "${TTRO_scriptDir}/version.sh"
+
+#-----------------------------------------------------
+# Shutdown and interrupt vars and functions
+declare -i TTTI_interruptReceived=0
+
+# Function interruptSignalMain
+function interruptSignalMain {
+	printInfo "SIGINT received in $TTTI_commandname ********************"
+	if [[ $TTTI_interruptReceived -eq 0 ]]; then
+		TTTI_interruptReceived=1
+	else
+		printInfo "Abort test"
+		exit $errSigint
+	fi
+	return 0
+}
+
+trap interruptSignalMain SIGINT
+
+# Function errorTrapFunc
+#	global error exit function - prints the caller stack
+function errorTrapFunc {
+	echo -e "\033[31mERROR: $FUNCNAME ***************"
+	local -i i=0;
+	while caller $i; do
+		i=$((i+1))
+	done
+	echo -e "************************************************\033[0m"
+}
+
+trap errorTrapFunc ERR
+#trap -p
+
+#-----------------------------------------------------
+#include the definitions
+source "${TTRO_scriptDir}/defs.sh"
+source "${TTRO_scriptDir}/mainutil.sh"
+source "${TTRO_scriptDir}/util.sh"
+source "${TTRO_scriptDir}/coreutil.sh"
+
+#-----------------------------------------------------
+#prepare list of initial exported functions to avoid that these
+#functions are write protected later
+TTTF_listExportedFunctions
+export TTXX_initialExportedFunctions
+
+#--------------------------------------------------------------------------------------
+#The export check - checks whethere there are already vaiables exported with TT prefix
+declare exportCheckFailed=""
+for x in "${!TTRO_@}"; do
+	if [[ $x != TTRO_scriptDir && $x != TTRO_version && $x != TTRO_propertyFiles && $x != TTRO_help* ]]; then
+		exportCheckFailed='true'
+		printWarning "In environment there are TT scoped identifier: ${x}"
+	fi
+done
+for x in "${!TTPRN_@}"; do
+	exportCheckFailed='true'
+	printWarning "In environment there are TT scoped identifier: ${x}"
+done
+for x in "${!TTPR_@}"; do
+	exportCheckFailed='true'
+	printWarning "In environment there are TT scoped identifier: ${x}"
+done
+for x in "${!TT_@}"; do
+	if [[ $x != TT_evaluationFile ]]; then
+		exportCheckFailed='true'
+		printWarning "In environment there are TT scoped identifier: ${x}"
+ 	fi
+done
+
+#------------------------------------------------------
+#declare all options and option variables the key is also the variable name
+declare -r -A singleOptions=(
+	['verbose']='-v --verbose'
+	['debug']='-d --debug'
+	#['noChecks']='-n --no-checks'
+	['noStart']='--no-start'
+	['noStop']='--no-stop'
+	['skipIgnore']='--skip-ignore'
+	['flat']='-f --flat'
+	['noprompt']='--noprompt --no-prompt'
+	['nobrowser']='--no-browser'
+	['summary']='--summary'
+	['xtraprint']='--xtraprint'
+	['sequential']='-s --sequential'
+	['clean']='--clean'
+	['loadReduce']='--load-reduce'
+	['shell']='--shell'
+)
+declare -r -A valueOptions=(
+	['workdir']='-w --workdir'
+	['directory']='-i --directory'
+	['threads']='-j --threads'
+	['reference']='--ref'
+	['threadsPerJob']='-x --threads-per-job'
+	#['loadLimit']='--load-limit --loadlimit'
+)
+for x in ${!singleOptions[@]}; do
+	declare ${x}=""
+done
+for x in ${!valueOptions[@]}; do
+	declare ${x}=""
+done
+declare -a propertyFiles=() # The property files
+declare -a varNamesToSet=() #The list with variable names to set
+declare -a varValuesToSet=() #The list with variables values to set
+declare -a cases=() # the list of cases from command line
+declare -a TTTT_runCategoryPatternArray=() #the run time category pattern array
+
+#------------------------------------------------------
+#set number of cores
+declare -r noCpus=$(cat /proc/cpuinfo | grep processor | wc -l)
+#getconf _NPROCESSORS_ONLN
+
+#---------------------------------------------------------
+if ! declare -p TTPRN_debug &> /dev/null; then TTPRN_debug=''; fi
+if ! declare -p TTPRN_debugDisable &> /dev/null; then TTPRN_debugDisable=''; fi
+if ! declare -p TTPRN_verbose &> /dev/null; then TTPRN_verbose=''; fi
+if ! declare -p TTPRN_verboseDisable &> /dev/null; then TTPRN_verboseDisable=''; fi
+
+declare -x TTXX_searchPath="$TTRO_scriptDir"
+
+#------------------------------------------------------
+# get parametes and set option variables and cases map
+declare parametersection="" # we start with options
+while [[ $# -ge 1 ]]; do
+	case $1 in
+	# serve the special cases first
+	-h|--help )
+		[[ -z $parametersection ]] || optionInParamSection $1
+		usage
+		exit 0;;
+	--man)
+		[[ -z $parametersection ]] || optionInParamSection $1
+		source "${TTRO_scriptDir}/man.sh"
+		manpage
+		exit 0;;
+	--bashhelp)
+		[[ -z $parametersection ]] || optionInParamSection $1
+		source "${TTRO_scriptDir}/manbash.sh"
+		manbashpage
+		exit 0;;
+	-V|--version)
+		[[ -z $parametersection ]] || optionInParamSection $1
+		echo "$TTRO_version"
+		exit 0;;
+	-p|--properties)
+		[[ $# -ge 2 && $2 != -* ]] || missOptionArg $1;
+		tmp="${#propertyFiles[@]}"
+		propertyFiles[$tmp]="$2"
+		shift;;
+	-c|--category)
+		tmp="${#TTTT_runCategoryPatternArray[@]}"
+		TTTT_runCategoryPatternArray[$tmp]="$2"
+		shift;;
+	-D)
+		[[ $# -ge 2 && $2 != -* ]] || missOptionArg $1;
+		vname=${2%%=*}
+		vvalue=${2#*=}
+		if [[ $2 != $vname && $2 != $vvalue ]]; then
+			i=${#varNamesToSet[@]}
+			varNamesToSet[$i]="$vname"
+			varValuesToSet[$i]="$vvalue"
+			shift
+		else
+			printError "Invalid format in parameter -D $2 variable name=$vname variable value=$vvalue"
+			usage
+			exit ${errInvocation}
+		fi;;
+	# now serve all general options and value options
+	-* )
+		[[ -z $parametersection ]] || optionInParamSection $1
+		declare optionFound=""
+		for option in ${!singleOptions[@]}; do
+			for ex in ${singleOptions[$option]}; do
+				if [[ $1 == ${ex} ]]; then
+					if [[ -n ${!option} ]]; then duplicateOption "${1}"; fi
+					eval "${option}=true"
+					optionFound='true'
+					break 2
+				fi
+			done
+		done
+		if [[ -z ${optionFound} ]]; then
+			for option in ${!valueOptions[@]}; do
+				for ex in ${valueOptions[$option]}; do
+					if [[ $1 == ${ex} ]]; then
+						if [[ -n ${!option} ]]; then duplicateOption "${1}"; fi
+						[[ $# -ge 2 && $2 != -* ]] || missOptionArg $1;
+						if [[ $option == reference && -z $2 ]]; then
+							reference="util.sh"
+						else
+							eval "${option}=$2"
+						fi
+						optionFound='true'
+						shift
+						break 2
+					fi
+				done
+			done
+		fi
+		if [[ -z ${optionFound} ]]; then
+			printError "Invalid argument '$1' !!!\n\n"
+			usage;
+			exit ${errInvocation}
+		fi
+	;;
+	* )
+		parametersection='true'
+		if [[ $1 == *::?* ]]; then
+			n=${#cases[*]}
+			cases[$n]="$1"
+		else
+			printErrorAndExit "Invalid format of test case '$1'.\nTest cases must be in the form suite::case or ::case" ${errInvocation}
+		fi
+	;;
+	esac
+	shift
+done
+unset -v parametersection
+
+#--------------------------------------
+# evaluate export check
+#if [[ -n "$exportCheckFailed" ]]; then
+#	exit ${errRt}
+#fi
+unset -v exportCheckFailed
+
+#-----------------------------------------------
+declare -x TTXX_modulesImported=''
+declare -x TTRO_reference=""
+if [[ -n $reference ]]; then
+	TTRO_reference='true'
+fi
+readonly TTRO_reference
+if [[ -n $TTRO_reference ]]; then
+	list1=$(echo "${!TTRO_help@} " | sort)
+	list3=''
+	if [[ $reference != "util.sh" ]]; then
+		import "$reference"
+		list2=$(echo "${!TTRO_help@} " | sort)
+		for x in $list2; do
+			if ! isInList "$x" "$list1"; then
+				list3="$list3 $x"
+			fi
+		done
+	else
+		list3="$list1"
+	fi
+	{
+		for x in $list3; do
+			name="${x#TTRO_help_}"
+			echo "#######################################"
+			echo -n "#		$name"
+			echo "${!x}"
+			echo
+			echo
+		done
+	} | less
+	exit 0
+fi
+
+#---------------------------------------------------------
+#set the number of threads to noCpus if not set otherwise
+if [[ -z $threads ]]; then
+	if [[ -n $loadReduce ]]; then
+		threads=$((noCpus/2))
+	else
+		threads=$noCpus
+	fi
+fi
+if [[ -z $threadsPerJob ]]; then
+	threadsPerJob=1
+fi
+if [[ -z $sequential && ( $threadsPerJob -gt $threads ) ]]; then
+	printErrorAndExit "threads-per-job -ge threads $threadsPerJob -ge $threads : abort" $errInvocation
+fi
+#if [[ -z $loadLimit ]]; then
+#	if [[ -n $loadReduce ]]; then
+#		loadLimit=$((noCpus/2))
+#	else
+#		loadLimit=$noCpus
+#	fi
+#fi
+
+#---------------------------------------------------------
+# reset the catergories if a command list was given
+if [[ ( ${#cases[*]} -gt 0 ) && ( ${#TTTT_runCategoryPatternArray[*]} -gt 0 ) ]]; then
+	printWarning "Categories are ignored since a case wildcard list was detected"
+	TTTT_runCategoryPatternArray=()
+fi
+declare -rx TTXX_runCategoryPatternArray=$(declare -p TTTT_runCategoryPatternArray)
+
+setVar 'TTPRN_debug' "$debug"
+setVar 'TTPRN_debugDisable' ''
+setVar 'TTPRN_verbose' "$verbose"
+setVar 'TTPRN_verboseDisable' ''
+
+if [[ -n $summary ]]; then
+	declare -xr TTXX_summary='true'
+else
+	declare -xr TTXX_summary=''
+fi
+if [[ -n $xtraprint ]]; then
+	setVar 'TTRO_xtraPrint' 'true'
+else
+	setVar 'TTRO_xtraPrint' ''
+fi
+if [[ -n $shell ]]; then
+	declare -xr TTXX_shell='true'
+else
+	declare -xr TTXX_shell=''
+fi
+#---------------------------------------------------------
+# create workdir if necessary and make it absolute
+if [[ -z ${workdir} ]]; then
+	workdir="${currentDir}/${DEFAULT_WORKDIR}"
+fi
+if ! mkdir -p ${workdir}; then
+	printErrorAndExit "Can not create workdir '${workdir}'" ${errRt}
+fi
+if cd "${workdir}"; then
+	workdir=$(pwd -P)
+else
+	printErrorAndExit "Invalid workdir '${workdir}' specified" ${errInvocation}
+fi
+cd "${currentDir}"
+#---------------------------------------------------------
+# get input directory and make it absolute correct search path
+if [[ -z ${directory} ]]; then
+	printErrorAndExit "No input directory specified" ${errInvocation}
+else
+	if cd "${directory}"; then
+		directory=$(pwd -P)
+		declare -x TTRO_inputDir="$directory"
+		TTXX_searchPath="$TTRO_inputDir $TTXX_searchPath"
+		export TTXX_searchPath
+	else
+		printErrorAndExit "Invalid directory '${directory}' specified" ${errInvocation}
+	fi
+	cd "${currentDir}"
+fi
+
+#-------------------------------------
+# add entries from TTRO_propertyFiles to propertyFiles list if there are no command line options given
+if [[ ${#propertyFiles[@]} -eq 0 ]]; then
+	if isExisting 'TTRO_propertyFiles'; then
+		for x in $TTRO_propertyFiles; do
+			if [[ ${x:0:1} != "/" ]]; then
+				printErrorAndExit "TTRO_propertyFiles element '$x' must have an absolute path" $errEnv
+			else
+				propertyFiles+=("$x")
+			fi
+		done
+	fi
+fi
+#properties file / tools file: if no path element is given use the current dir as prefix
+for ((i=0; i<${#propertyFiles[@]}; i++)); do
+	tmp="${propertyFiles[$i]}"
+	if [[ ${tmp:0:1} != "/" ]]; then
+		tmp="${currentDir}/${tmp}"
+	fi
+	tmp2=$(readlink -m "$tmp")
+	propertyFiles[$i]="$tmp2"
+done
+readonly propertyFiles
+
+#----------------------------------
+#finally make option variables read only
+for x in ${!singleOptions[@]}; do
+	readonly ${x}
+done
+for x in ${!valueOptions[@]}; do
+	readonly ${x}
+done
+
+#-------------------------------------------
+# set the global programm defined properties
+if [[ ( -n $sequential ) || ( -n $shell ) ]]; then
+	setVar 'TTRO_noParallelCases' 1
+	setVar 'TTRO_treads' "$threads"
+else
+	setVar 'TTRO_noParallelCases' $((threads/threadsPerJob))
+	setVar 'TTRO_treads' "$threadsPerJob"
+fi
+#setVar 'TTRO_loadLimit100' "$loadLimit"
+
+#some more property definitions
+for ((i=0; i<${#varNamesToSet[@]}; i++)); do
+	declare "${varNamesToSet[$i]}"="${varValuesToSet[$i]}"
+done
+if [[ $clean == 'true' ]]; then
+	setVar 'TTPR_clean' 'true'
+fi
+if [[ $noStart == 'true' ]]; then
+	setVar TTPR_noStart 'true'
+	setVar TTPR_noPrepsSuite 'true'
+fi
+if [[ $noStop == 'true' ]]; then
+	setVar TTPR_noStop 'true'
+	setVar TTPR_noFinsSuite 'true'
+fi
+setVar TTRO_noPrompt "$noprompt"
+setVar TTPRN_skip ''
+if [[ -n ${skipIgnore} ]]; then
+	setVar 'TTPRN_skipIgnore' 'true'
+else
+	setVar 'TTPRN_skipIgnore' ''
+fi
+TTTF_fixPropsVars
+
+#--------------------------------
+# Programm entry
+printParams
+
+#-----------------------------------------------------------------------------------------
+
+#-----------------------------------------------------------------------------------------
+# Check test properies file if properties parameter was given
+for ((i=0; i<${#propertyFiles[@]}; i++)) do
+	x="${propertyFiles[$i]}"
+	if [[ -r "$x" ]]; then
+		isVerbose && printVerbose "Found readable test properties file $x"
+	else
+		printErrorAndExit "No test properties file $x found" $errRt
+	fi
+done
+
+#-----------------------------------------------------------------------------------------
+# search test suites. Suites are directories with a suite definition file $TEST_SUITE_FILE
+# globals for searches
+declare suitesIndex=0      #the global index of the next suite
+declare -a TTTI_suitesPath=()   #the array with all suites pathes
+declare -a TTTI_suitesName=()   #the logical name of the suite (is the r-path from parent element if no link is involved)
+declare -a TTTI_executeSuite=() #true if this suite is to execute
+declare -a TTTI_childSuites=()  #the array with the list of all sub-suite indexes for every suite index
+declare casesIndex=0       #the global index of the next case
+declare -a TTTI_casesPath=()    #the array with all case pathes
+declare -a TTTI_casesName=()    #the logical name of the case
+declare -a TTTI_executeCase=()  #execute the case
+declare -a TTTI_childCases=()   #the array with the list of all case indexes for each suite index
+declare noCases=0          #number of found cases
+declare noSuites=0         #number of found suites
+if [[ -z $TTRO_reference ]]; then
+	#initialize the globals for dummy suite
+	suitesIndex=1             #dummy suite is index 0
+	TTTI_suitesPath[0]="$TTRO_inputDir" #the dummy suite path
+	TTTI_suitesName[0]=''
+	TTTI_childSuites[0]=''
+	TTTI_childCases[0]=''
+	TTTI_executeSuite[0]=''
+	#global level 0 cild suites counter
+	declare childSuitesIndex=0
+	scan "$TTRO_inputDir" "0"
+fi
+declare -r noSuites=$((suitesIndex-1))
+declare -r noCases="$casesIndex"
+isDebug && printDebug "$noSuites suites found and $noCases cases found"
+# print suites
+if isDebug; then
+	printDebug "******************* test suites/cases found in $TTRO_inputDir *******************"
+	printSuitesCases 0 0 '' 'true'
+	printDebug "*********************************************************************************"
+	declare -p TTTI_suitesPath
+	declare -p TTTI_suitesName
+	declare -p TTTI_childSuites
+	declare -p TTTI_childCases
+	declare -p TTTI_casesPath
+	declare -p TTTI_casesName
+fi
+
+#------------------------------------------
+#The final list with test cases to execute
+declare -i noCasesToExecute=0
+declare -i noSuitesToExecute=0
+declare usedCaseIndexList=''
+#if the command line has no case list, all found cases are executed
+#otherwise all matching cases found are executed
+if [[ ${#cases[@]} -eq 0 ]]; then
+	#the command line specified no cases -> all found cases are executed and skip attributes are honoured
+	for ((i=0; i<${#TTTI_executeSuite[@]}; i++)); do
+		TTTI_executeSuite[$i]='true'
+	done
+	for ((i=0; i<${#TTTI_executeCase[@]}; i++)); do
+		TTTI_executeCase[$i]='true'
+	done
+else
+	declare caseToExecuteParent=''
+	checkCaseMatch '0' '0' '' ''
+	#if [[ -n $caseToExecuteParent ]]; then
+	#dummy suite is always executed
+	TTTI_executeSuite[0]='true'
+	#fi
+fi
+#declare -p TTTI_executeSuite
+#declare -p TTTI_executeCase
+
+for ((i=0; i<${#TTTI_executeSuite[@]}; i++)); do
+	if [[ -n ${TTTI_executeSuite[$i]} ]]; then
+		noSuitesToExecute=$((noSuitesToExecute+1))
+	fi
+done
+
+#--------------------------------------------------
+#check whether cases from input list are not found
+for x in ${!cases[@]}; do
+	patternMatchWasFound=''
+	for y in $usedCaseIndexList; do
+		if [[ $x == $y ]]; then
+			patternMatchWasFound='true'
+			break
+		fi
+	done
+	if [[ -z $patternMatchWasFound ]]; then
+		printWarning "Case ${cases[$x]} from parameter list was not found in input directory ${directory}"
+	fi
+done
+
+#--------------------------------------------------
+#guard the lists
+readonly suitesIndex TTTI_suitesPath TTTI_suitesName TTTI_executeSuite TTTI_childSuites
+readonly TTTI_casesPath TTTI_casesName TTTI_executeCase TTTI_childCases
+
+readonly noCases noSuites noCasesToExecute noSuitesToExecute
+
+#--------------------------------------------------
+# print final execution list and prompt
+printInfo "******************* $noSuitesToExecute suites (incl dummy) and $noCasesToExecute cases to execute in $TTRO_inputDir *******************"
+printSuitesCases 0 0 'true' ''
+
+echo "********************************************************"
+if [[ -z $TTRO_noPrompt && -z $TTRO_reference ]]; then
+	while read -p "Continue or exit? y/e "; do
+		if [[ $REPLY == y* || $REPLY == Y* || $REPLY == c* || $REPLY == C* ]]; then
+			break
+		elif [[ $REPLY == e* || $REPLY == E* || $REPLY == n* || $REPLY == N* ]]; then
+			exit $errScript
+		fi
+	done
+fi
+
+#######################################################################################
+#echo "*******************************************************************************************************"
+declare -r collectionStartTime=$(date -u +%s)
+declare -xr TTRO_collection="${TTRO_inputDir##*/}"
+printInfo "**** START Collection collection='$TTRO_collection' START ********************"
+printInfo "Use $TTRO_noParallelCases parallel jobs and $TTRO_treads threads per job on $noCpus cores"
+#-----------------------
+#export execution lists
+export TTXX_suitesPath=$(declare -p TTTI_suitesPath)
+export TTXX_suitesName=$(declare -p TTTI_suitesName)
+export TTXX_executeSuite=$(declare -p TTTI_executeSuite)
+export TTXX_childSuites=$(declare -p TTTI_childSuites)
+export TTXX_casesPath=$(declare -p TTTI_casesPath)
+export TTXX_casesName=$(declare -p TTTI_casesName)
+export TTXX_executeCase=$(declare -p TTTI_executeCase)
+export TTXX_childCases=$(declare -p TTTI_childCases)
+
+#----------------
+#make output dir
+declare -r TTTT_datestring=$(date +%Y%m%d-%H%M%S)
+if [[ $flat == 'true' ]]; then
+	TTRO_workDir="${workdir}"
+else
+	TTRO_workDir="${workdir}/${TTTT_datestring}"
+fi
+if [[ $flat != 'true' && -e $TTRO_workDir ]]; then
+	printErrorAndExit "Output directory already exists $TTRO_workDir" $errRt
+fi
+if [[ -e $TTRO_workDir ]]; then
+	if [[ -n $TTRO_noPrompt ]]; then
+		rm -rf "$TTRO_workDir"
+	else
+		while read -p "WARNING: Output directory already exists $TTRO_workDir: Remove it or not or exit? y/n/e "; do
+			if [[ $REPLY == y* || $REPLY == Y* ]]; then
+				rm -rf "$TTRO_workDir"
+				break
+			elif [[ $REPLY == n* || $REPLY == N* ]]; then
+				break
+			elif [[ $REPLY == e* || $REPLY == E* ]]; then
+				exit $errScript
+			fi
+		done
+	fi
+fi
+mkdir -p "$TTRO_workDir"
+printInfo "TTRO_workDir=$TTRO_workDir"
+
+#------------------------------------------------
+# enter working dir
+cd "$TTRO_workDir"
+
+#-----------------------------------------------------------
+#check if properties file exists - read properties and fixup
+if [[ ${#propertyFiles[@]} -gt 0 ]]; then
+	for ((i=0; i<${#propertyFiles[@]}; i++)); do
+		x="${propertyFiles[$i]}"
+		printInfo "Include global properties $x"
+		source "${x}"
+		TTTF_fixPropsVars
+		TTTF_writeProtectExportedFunctions
+	done
+elif [[ -e "$TTRO_inputDir/$TEST_PROPERTIES" ]]; then
+	printInfo "Include global properties $TTRO_inputDir/$TEST_PROPERTIES"
+	source "$TTRO_inputDir/$TEST_PROPERTIES"
+	TTTF_fixPropsVars
+	TTTF_writeProtectExportedFunctions
+else
+	printInfo "No global properies file to evaluate"
+	TTTF_fixPropsVars
+	TTTF_writeProtectExportedFunctions
+fi
+
+#------------------------------------------------
+# diagnostics
+isVerbose && printTestframeEnvironment
+tmp="${TTRO_workDir}/${TEST_ENVIRONMET_LOG}"
+printTestframeEnvironment > "$tmp"
+set +o posix
+export >> "$tmp"
+declare -F >> "$tmp"
+set -o posix
+
+#--------------------------------------------
+#execution loop over suites and variants
+declare -i TTTI_suiteVariants=0 TTTI_suiteErrors=0 TTTI_suiteSkip=0
+if [[ $TTTI_interruptReceived -eq 0 ]]; then
+	isVerbose && printVerbose "**** START Root Suite ************************************"
+	TTTF_exeSuite "0" "" "-1" "" "" "${TTRO_workDir}" "" "";
+	isVerbose && printVerbose "**** END Root Suite **************************************"
+fi
+
+#print result lists
+printInfo  "**** END Collection collection='$TTRO_collection' END ********************"
+for x in CASE_EXECUTE CASE_SUCCESS CASE_SKIP CASE_FAILURE CASE_ERROR SUITE_EXECUTE SUITE_SKIP SUITE_ERROR; do
+	tmp="${TTRO_workDir}/${x}"
+	eval "${x}Count=0"
+	if isVerbose || [[ $x == *_SUCCESS || $x == *_SKIP || $x == *_FAILURE || $x == *_ERROR ]]; then echo; echo "**** $x List : ************************"; fi
+	if [[ -e ${tmp} ]]; then
+		{
+			while read; do
+				if isVerbose || [[ $x == *_SUCCESS || $x == *_SKIP || $x == *_FAILURE || $x == *_ERROR ]]; then echo "$REPLY "; fi
+				if [[ $REPLY != \#* ]]; then
+					eval "${x}Count=\$((\${x}Count+1))"
+				fi
+			done
+		} < "$tmp"
+	else
+		printErrorAndExit "No result file ${tmp} exists" $errRt
+	fi
+done
+
+#Print suite errors and collection
+if [[ $SUITE_ERRORCount -gt 0 ]]; then
+	printError "Errors in $SUITE_ERRORCount suites!"
+fi
+
+indexfilename="${TTRO_workDir}/index.html"
+cats=''
+if [[ ${#TTTT_runCategoryPatternArray[*]} -gt 0 ]]; then
+	cats="${TTTT_runCategoryPatternArray[@]}"
+fi
+echo
+{
+	printf "*******************************************************************************************************\n"
+	printf "***** collection : %s\n" $TTRO_collection
+	printf "***** suites executed=%i errors=%i skipped=%i\n" $SUITE_EXECUTECount $SUITE_ERRORCount $SUITE_SKIPCount
+	printf "***** cases  executed=%i failures=%i errors=%i skipped=%i\n" $CASE_EXECUTECount $CASE_FAILURECount $CASE_ERRORCount $CASE_SKIPCount
+	printf "***** categories of this run : %s\n" "$cats"
+	printf "***** used workdir : %s\n" "$TTRO_workDir"
+	printf "***** Index in %s\n" "$indexfilename"
+	getElapsedTime "$collectionStartTime"
+	printf "***** Elapsed time : %s\n" "$TTTT_elapsedTime"
+	printf "***** Datestring : %s\n" "$TTTT_datestring"
+	printf "***** runBTF version : %s\n" "$TTRO_version"
+	printf "*******************************************************************************************************\n"
+} > "$TTRO_workDir/SUMMARY.txt"
+
+cat "$TTRO_workDir/SUMMARY.txt"
+
+#--------------------------------------------
+# prepare html docs
+#createCSS "${TTRO_workDir}/testframe.css"
+TTTF_createGlobalIndex "$indexfilename" "$TTTT_elapsedTime"
+
+declare mainResult=0
+if [[ $TTTI_interruptReceived -ne 0 ]]; then
+	mainResult=$errSigint
+elif [[ $SUITE_ERRORCount -gt 0 ]]; then
+	mainResult=$errSuiteError
+elif [[ $CASE_ERRORCount -gt 0 ]]; then
+	mainResult=$errTestError
+elif [[ $CASE_FAILURECount -gt 0 ]]; then
+	mainResult=$errTestFail
+fi
+
+builtin echo -n "$mainResult" > "$TTRO_workDir/DONE"
+
+if [[ -z $nobrowser ]]; then
+	tmp='firefox'
+	if isExisting 'BROWSER'; then
+		tmp="$BROWSER"
+	fi
+	if [[ -z $tmp ]]; then
+		isVerbose && printVerbose "Empty BROWSER variable: no browser started"
+	else
+		if ! startAsync2 "$tmp" "$indexfilename"; then
+			printError "Browser command $tmp failed"
+		fi
+	fi
+fi
+
+exit $mainResult
