@@ -130,10 +130,6 @@ function manpage () {
 	The defined tool artifacs are available in nested Suites and nested cases.
 	Once a function has been defined, it can not be re-defined in a nested element.
 
-	Especially the streamsutils.sh must be imported at the beginning of the main body of the outermost Test Suite file:
-
-	import "streamsutils.sh"\n
-
 	This modules are searched in the directory of the current TestCase/TestSuite, in all directories of enclosing suites,
 	in the directory of the Test Collection and in the bin-directory.
 
