@@ -4,11 +4,11 @@ The test script is a framework for the control of test case execution.
 
 To learn more start with execution of help and man:
 
-./bin/runBTF --help
+./bin/runbtf --help
 
 and
 
-./bin/runBTF --man
+./bin/runbtf --man
 
 In directory samples you can see the Test Collection ANewTest, which is a sample for a basic Test Collection
 

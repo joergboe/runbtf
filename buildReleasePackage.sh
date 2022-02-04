@@ -32,8 +32,8 @@ fi
 
 mkdir -p "$docdir"
 cd bin
-./runBTF --man | grep -v '===' > "../${docdir}/manpage.md"
-./runBTF --ref '' > ../${docdir}/utils.txt.tmp
+./runbtf --man | grep -v '===' > "../${docdir}/manpage.md"
+./runbtf --ref '' > ../${docdir}/utils.txt.tmp
 while read -r; do
 	if [[ $REPLY =~ \#[[:space:]] ]]; then
 		echo "${REPLY:1}"

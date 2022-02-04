@@ -10,7 +10,7 @@ declare -ar outputValidation=("*ERROR: Invalid argument*" "*ERROR: Missing Optio
 
 function executeCase {
 	local tmp="${prameterArray[$TTRO_variantCase]}"
-	if $TTPRN_binDir/runBTF $tmp 2>&1 | tee STDERROUT1.log; then
+	if $TTPRN_binDir/runbtf $tmp 2>&1 | tee STDERROUT1.log; then
 		return $errTestFail
 	else
 		result=$?

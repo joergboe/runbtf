@@ -40,7 +40,7 @@ if [[ -n $help ]]; then
 fi
 
 if [[ -n $interactive ]]; then
-	DEFAULTINSTALLDIR='runBTF'
+	DEFAULTINSTALLDIR='runbtf'
 	installUser=$(whoami)
 	if [[ $installUser == 'root' ]]; then
 		destination="/opt/$DEFAULTINSTALLDIR"
@@ -58,12 +58,12 @@ if [[ $commandname =~ testframeInstaller_v([0-9]+)\.([0-9]+)\.([0-9]+)\.sh ]]; t
 	major="${BASH_REMATCH[1]}"
 	minor="${BASH_REMATCH[2]}"
 	fix="${BASH_REMATCH[3]}"
-	echo "Install runBTF release $major.$minor.$fix"
+	echo "Install runbtf release $major.$minor.$fix"
 elif [[ $commandname =~ testframeInstaller_v([0-9]+)\.([0-9]+)\.([0-9]+.+)\.sh ]]; then
 	major="${BASH_REMATCH[1]}"
 	minor="${BASH_REMATCH[2]}"
 	fix="${BASH_REMATCH[3]}"
-	echo "Install runBTF development version $major.$minor.$fix"
+	echo "Install runbtf development version $major.$minor.$fix"
 else
 	echo "ERROR: This is no valid install package commandname=$commandname" >&2
 	exit 1
@@ -132,9 +132,9 @@ mkdir -p $installdir
 mkdir -p ${bindir}
 mkdir -p ${sampledir}
 #remove old links
-rm -f "${destination}/bin/runBTF"
-rm -f "${destination}/bin/runBTF$major"
-rm -f "${destination}/bin/runBTF$major.$minor"
+rm -f "${destination}/bin/runbtf"
+rm -f "${destination}/bin/runbtf$major"
+rm -f "${destination}/bin/runbtf$major.$minor"
 #move to target
 mv "$tempdir/README.md" "${destination}/${versiondir}"
 mv "$tempdir/RELEASE.INFO" "${destination}/${versiondir}"
@@ -145,16 +145,16 @@ mv $tempdir/bin/* $bindir
 rm -rf "${destination}/tmp"
 #make links
 mkdir -p ${destination}/bin
-ln -s ${bindir}/runBTF ${destination}/bin/runBTF
-ln -s ${bindir}/runBTF ${destination}/bin/runBTF$major
-ln -s ${bindir}/runBTF ${destination}/bin/runBTF$major.$minor
+ln -s ${bindir}/runbtf ${destination}/bin/runbtf
+ln -s ${bindir}/runbtf ${destination}/bin/runbtf$major
+ln -s ${bindir}/runbtf ${destination}/bin/runbtf$major.$minor
 
 echo "***************************************************"
 echo "Installation complete. Target bin directory $bindir"
-echo "You can execute the runBTF help function:"
-echo "${destination}/bin/runBTF --help"
-echo "${destination}/bin/runBTF$major --help"
-echo "${destination}/bin/runBTF$major.$minor --help"
+echo "You can execute the runbtf help function:"
+echo "${destination}/bin/runbtf --help"
+echo "${destination}/bin/runbtf$major --help"
+echo "${destination}/bin/runbtf$major.$minor --help"
 echo "***************************************************"
 
 # Exit from the script with success (0)

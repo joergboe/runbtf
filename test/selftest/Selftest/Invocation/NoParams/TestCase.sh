@@ -2,7 +2,7 @@
 STEPS='noParams myEvaluate'
 
 function noParams {
-	if $TTPRN_binDir/runBTF 2>&1 | tee STDERROUT1.log; then
+	if $TTPRN_binDir/runbtf 2>&1 | tee STDERROUT1.log; then
 		return $errTestFail
 	else
 		result=$?

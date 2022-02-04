@@ -1,7 +1,7 @@
 #####################################################
 # Utilities for the core testframework script code
 #
-# modul is sourced in runBTF, suite.sh and case.#!/bin/sh
+# modul is sourced in runbtf, suite.sh and case.#!/bin/sh
 # user code conflicts are potential possible
 #####################################################
 

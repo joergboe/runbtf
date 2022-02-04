@@ -1,5 +1,5 @@
 #####################################################
-# Utilities for the main testframework script runBTF
+# Utilities for the main testframework script runbtf
 #
 # functions are not exported
 # and user code conflicts are possible

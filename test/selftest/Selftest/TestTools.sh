@@ -33,15 +33,15 @@ function copyAndModifyTestCollection {
 }
 export -f copyAndModifyTestCollection
 
-TTRO_help_runRunBTF='
+TTRO_help_runrunbtf='
 # Execute the test freamework with input directory testCollection intercept error
 #	TT_runOptions - additional options
 #	TT_caseList - the case list
 #	TT_expectedResult - the expected result code a number or X when to be ignored'
-function runRunBTF {
+function runrunbtf {
 	isDebug && printDebug "$FUNCNAME $*"
 	local result
-	if echoAndExecute $TTPRN_binDir/runBTF --directory "$TTRO_workDirCase/testCollection" $TT_runOptions $TT_caseList 2>&1 | tee STDERROUT1.log; then
+	if echoAndExecute $TTPRN_binDir/runbtf --directory "$TTRO_workDirCase/testCollection" $TT_runOptions $TT_caseList 2>&1 | tee STDERROUT1.log; then
 		result=0
 	else
 		result=$?
@@ -67,7 +67,7 @@ function runRunBTF {
 		fi
 	fi
 }
-export -f runRunBTF
+export -f runrunbtf
 
 TTRO_help_checkResults='
 # Function checkResults

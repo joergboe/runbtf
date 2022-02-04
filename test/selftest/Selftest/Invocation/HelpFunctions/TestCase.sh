@@ -33,7 +33,7 @@ case $TTRO_variantCase in
 
 		;;
 	man)
-		TTTT_patternList=('The runBTF script is a framework for the control of test case execution.*'
+		TTTT_patternList=('The runbtf script is a framework for the control of test case execution.*'
 					 'The execution of test case/suite variants and the parallel execution is inherently supported.*'
 					 '## Test Cases, Test Suites and Test Collections*'
 					 '==============================================='
@@ -55,14 +55,14 @@ esac
 function executeCase {
 	local tmp="--$TTRO_variantCase"
 	if [[ $TTRO_variantCase == "ref" ]]; then
-		if $TTPRN_binDir/runBTF '--ref' '' '--directory' "$TTRO_inputDirCase/test" '--noprompt' '-d' 2>&1 | tee STDERROUT1.log; then
+		if $TTPRN_binDir/runbtf '--ref' '' '--directory' "$TTRO_inputDirCase/test" '--noprompt' '-d' 2>&1 | tee STDERROUT1.log; then
 			return 0
 		else
 			return $errTestFail
 		fi
 	else
 		echo "$tmp"
-		if $TTPRN_binDir/runBTF $tmp 2>&1 | tee STDERROUT1.log; then
+		if $TTPRN_binDir/runbtf $tmp 2>&1 | tee STDERROUT1.log; then
 			return 0
 		else
 			return $errTestFail
