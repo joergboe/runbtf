@@ -1,7 +1,7 @@
 #--variantList='noParm emptyCommand true false simpleCommands1 simpleCommands2 noParmCheck emptyCommandCheck trueCheck falseCheck simpleCommands1Check simpleCommands2Check'
 
 PREPS='copyAndModifyTestCollection'
-STEPS="setExpections runRunBTF checkResults"
+STEPS="setExpections runRunbtf checkResults"
 
 function setExpections {
 	TT_suitesExecuted=0

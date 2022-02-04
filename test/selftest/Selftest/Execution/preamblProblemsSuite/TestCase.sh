@@ -4,7 +4,7 @@ PREPS='copyAndModifyTestCollection'
 STEPS='
   getOptions
   TT_expectResult=$errSuiteError
-  runRunBTF
+  runRunbtf
   TT_suitesExecuted=5
   TT_suitesError=5
   checkResults

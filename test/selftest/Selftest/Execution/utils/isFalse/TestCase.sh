@@ -1,7 +1,7 @@
 #--variantList='varNotExists varFalse varTrue'
 
 PREPS='copyAndModifyTestCollection'
-STEPS="setExpections runRunBTF checkResults"
+STEPS="setExpections runRunbtf checkResults"
 
 function setExpections {
 	TT_suitesExecuted=0

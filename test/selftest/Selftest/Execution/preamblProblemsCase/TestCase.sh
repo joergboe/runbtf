@@ -4,7 +4,7 @@ PREPS='copyAndModifyTestCollection'
 STEPS='
   getOptions
   TT_expectResult=$errTestError
-  runRunBTF
+  runRunbtf
   TT_casesError=3
   TT_casesExecuted=3
   checkResults

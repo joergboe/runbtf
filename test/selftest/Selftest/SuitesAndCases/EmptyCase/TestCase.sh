@@ -1,7 +1,7 @@
 #--variantCount=4
 
 PREPS='copyAndModifyTestCollection'
-STEPS='runRunBTF myEvaluate'
+STEPS='runRunbtf myEvaluate'
 
 declare -a options=( '--noprompt --no-browser' '-j 1 --noprompt --no-browser' '-j 1 -v --noprompt --no-browser' '-j 1 -v -d --noprompt --no-browser' )
 
