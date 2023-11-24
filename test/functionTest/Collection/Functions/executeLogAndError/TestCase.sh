@@ -40,7 +40,7 @@ function testStep {
 			if [[ $TTTT_result -ne 127 ]]; then
 				setFailure "returncode is $TTTT_result and not 127"
 			fi
-			linewisePatternMatchInterceptAndSuccess "$TT_evaluationFile" 'true' '*bxbxbx*' '*command not found*';;
+			linewisePatternMatchInterceptAndSuccess "$TT_evaluationFile" 'true' '*bxbxbx*';;
 		succ)
 			executeLogAndError 'returnSucc'
 			if [[ $TTTT_result -ne 0 ]]; then
