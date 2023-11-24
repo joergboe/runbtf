@@ -497,7 +497,7 @@ handleJobEnd() {
 				local psres="$errSigint"
 				while [[ $psres -eq $errSigint ]]; do
 					psres=0
-					jobsOutput=$(export LC_ALL='en_US.UTF-8'; jobs "%$jobspec" 2>/dev/null) || psres="$?"
+					jobsOutput=$(export LC_ALL=C; jobs "%$jobspec" 2>/dev/null) || psres="$?"
 				done
 				if [[ ( $psres -eq 0 ) && ( -n $jobsOutput ) ]]; then
 					local part1="${jobsOutput%%[[:space:]]*}"
@@ -686,13 +686,13 @@ startNewJobs() {
 		# !! we need jobspc to find out the pid of the job leader (when a pipe was started)
 		while [[ $psres -eq $errSigint ]]; do #repeat command if interrupted
 			psres=0;
-			jobsOutput=$(export LC_ALL='en_US.UTF-8'; jobs -l %+) || psres=$?
+			jobsOutput=$(export LC_ALL=C; jobs -l %+) || psres=$?
 		done
 		#extract jobspec and newPidLead from jobs output if available
 		if [[ ( $psres -eq 0 ) && ( -n "$jobsOutput" ) ]]; then
 			echo "$jobsOutput" > "$cworkdir/JOBS"
 			echo "Full Job list" >> "$cworkdir/JOBS"
-			LC_ALL='en_US.UTF-8' jobs -l >> "$cworkdir/JOBS"
+			LC_ALL=C jobs -l >> "$cworkdir/JOBS"
 			isDebug && printDebug "jobspec:$jobsOutput"
 			local part1="${jobsOutput%%[[:space:]]*}"
 			local rest1="${jobsOutput#*[[:space:]]}"
