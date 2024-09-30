@@ -20,20 +20,20 @@ TTRO_help_setFailure='
 function setFailure {
 	if isExisting 'TTRO_variantCase'; then # this is a case
 		if [[ $TTTT_executionState != 'execution' ]]; then
-			printWarning "$FUNCNAME called in phase $TTTT_executionState. Use this function only in phase 'execution'"
+			printWarning "${FUNCNAME[0]} called in phase $TTTT_executionState. Use this function only in phase 'execution'"
 		fi
 		if [[ $# -gt 0 ]]; then
 			if [[ -z $1 ]]; then
-				printErrorAndExit "$FUNCNAME must not be called with empty argument \$1" $errRt
+				printErrorAndExit "${FUNCNAME[0]} must not be called with empty argument \$1" "${errRt}"
 			fi
 			TTTT_failureOccurred="$1"
 		else
 			TTTT_failureOccurred='unspecified'
 		fi
-		printError "$FUNCNAME : $TTTT_failureOccurred"
+		printError "${FUNCNAME[0]} : $TTTT_failureOccurred"
 		return 0
 	else # this is not a case
-		printErrorAndExit "Do not call the function $FUNCNAME in a test suite context" $errRt
+		printErrorAndExit "Do not call the function ${FUNCNAME[0]} in a test suite context" "${errRt}"
 	fi
 }
 readonly -f setFailure
@@ -50,7 +50,7 @@ TTRO_help_setCategory='
 #	$1 ... the category identifieres of this atrifact'
 function setCategory {
 	if [[ $TTTT_executionState != 'initializing' ]]; then
-		printErrorAndExit "$FUNCNAME must be called in state 'initializing' state now: $TTTT_executionState" $errRt
+		printErrorAndExit "${FUNCNAME[0]} must be called in state 'initializing' state now: $TTTT_executionState" "${errRt}"
 	fi
 	TTTT_categoryArray=()
 	local i=0
@@ -75,17 +75,17 @@ TTRO_help_setSkip='
 #	if called with empty argument $1'
 function setSkip {
 	if [[ $TTTT_executionState != 'initializing' ]]; then
-		printErrorAndExit "$FUNCNAME must be called in state 'initializing' state now: $TTTT_executionState" $errRt
+		printErrorAndExit "${FUNCNAME[0]} must be called in state 'initializing' state now: $TTTT_executionState" "${errRt}"
 	fi
 	if [[ $# -gt 0 ]]; then
 		if [[ -z $1 ]]; then
-			printErrorAndExit "$FUNCNAME must not be called with empty argument \$1" $errRt
+			printErrorAndExit "${FUNCNAME[0]} must not be called with empty argument \$1" "${errRt}"
 		fi
 		setVar 'TTPRN_skip' "$1"
 	else
 		setVar 'TTPRN_skip' 'unspecified'
 	fi
-	printInfo "$FUNCNAME : $TTPRN_skip"
+	printInfo "${FUNCNAME[0]} : $TTPRN_skip"
 }
 readonly -f setSkip
 
@@ -93,11 +93,11 @@ TTRO_help_printErrorAndExit="
 # Function printErrorAndExit
 # 	prints an error message and exits
 #	\$1 the error message to print
-#	\$2 optional exit code, default is $errRt
+#	\$2 optional exit code, default is ${errRt}
 #	returns: never"
 function printErrorAndExit {
 	printError "$1"
-	local errcode=$errRt
+	local errcode="${errRt}"
 	if [[ $# -gt 1 ]]; then errcode="$2"; fi
 	echo -e "\033[31m EXIT: $errcode ***************"
 	local -i i=0;
@@ -310,11 +310,11 @@ TTRO_help_isPureNumber='
 function isPureNumber {
 	if [[ $1 =~ [0-9]+ ]]; then
 		if [[ "${BASH_REMATCH[0]}" == "$1" ]]; then
-			isDebug && printDebug "$FUNCNAME '$1' return 0"
+			isDebug && printDebug "${FUNCNAME[0]} '$1' return 0"
 			return 0
 		fi
 	fi
-	isDebug && printDebug "$FUNCNAME '$1' return 1"
+	isDebug && printDebug "${FUNCNAME[0]} '$1' return 1"
 	return 1
 }
 readonly -f isPureNumber
@@ -328,16 +328,16 @@ TTRO_help_isNumber='
 function isNumber {
 	if [[ $1 =~ [0-9]+ ]]; then
 		if [[ "${BASH_REMATCH[0]}" == "$1" ]]; then
-			isDebug && printDebug "$FUNCNAME '$1' return 0"
+			isDebug && printDebug "${FUNCNAME[0]} '$1' return 0"
 			return 0
 		fi
 	elif [[ $1 =~ [-+][0-9]+ ]]; then
 		if [[ "${BASH_REMATCH[0]}" == "$1" ]]; then
-			isDebug && printDebug "$FUNCNAME '$1' return 0"
+			isDebug && printDebug "${FUNCNAME[0]} '$1' return 0"
 			return 0
 		fi
 	fi
-	isDebug && printDebug "$FUNCNAME '$1' return 1"
+	isDebug && printDebug "${FUNCNAME[0]} '$1' return 1"
 	return 1
 }
 readonly -f isNumber
@@ -356,57 +356,57 @@ TTRO_help_setVar='
 #	or if the variable could not be set (e.g a readonly variable was already set
 #	ignored property values do not generate an error'
 function setVar {
-	if [[ $# -ne 2 ]]; then printErrorAndExit "$FUNCNAME missing params. Number of Params is $#" $errRt; fi
-	isDebug && printDebug "$FUNCNAME $1 $2"
+	if [[ $# -ne 2 ]]; then printErrorAndExit "${FUNCNAME[0]} missing params. Number of Params is $#" "${errRt}"; fi
+	isDebug && printDebug "${FUNCNAME[0]} $1 $2"
 	case $1 in
 		TTPRN_* )
 			#set property only if it is unset or null an make it readonly
 			if ! declare -p ${1} &> /dev/null || [[ -z ${!1} ]]; then
 				if ! eval export \'${1}\'='"${2}"'; then
-					printErrorAndExit "${FUNCNAME} : Invalid expansion in varname=${1} value=${2}" ${errRt}
+					printErrorAndExit "${FUNCNAME[0]} : Invalid expansion in varname=${1} value=${2}" ${errRt}
 				else
-					isVerbose && printVerbose "${FUNCNAME} : ${1}='${!1}'"
+					isVerbose && printVerbose "${FUNCNAME[0]} : ${1}='${!1}'"
 				fi
 				if [[ -n ${!1} ]]; then
 					readonly ${1}
 				fi
 			else
-				isVerbose && printVerbose "$FUNCNAME ignore value for ${1}"
+				isVerbose && printVerbose "${FUNCNAME[0]} ignore value for ${1}"
 			fi
 		;;
 		TTPR_* )
 			#set property only if it is unset an make it readonly
 			if ! declare -p "${1}" &> /dev/null; then
 				if ! eval export \'${1}\'='"${2}"'; then
-					printErrorAndExit "${FUNCNAME} : Invalid expansion varname=${1} value=${2}" ${errRt}
+					printErrorAndExit "${FUNCNAME[0]} : Invalid expansion varname=${1} value=${2}" ${errRt}
 				else
-					isVerbose && printVerbose "${FUNCNAME} : ${1}='${!1}'"
+					isVerbose && printVerbose "${FUNCNAME[0]} : ${1}='${!1}'"
 				fi
 				readonly ${1}
 			else
-				isVerbose && printVerbose "$FUNCNAME ignore value for ${1}"
+				isVerbose && printVerbose "${FUNCNAME[0]} ignore value for ${1}"
 			fi
 		;;
 		TTRO_* )
 			#set a global readonly variable
 			if eval export \'${1}\'='"${2}"'; then
-				isVerbose && printVerbose "${FUNCNAME} : ${1}='${!1}'"
+				isVerbose && printVerbose "${FUNCNAME[0]} : ${1}='${!1}'"
 			else
-				printErrorAndExit "${FUNCNAME} : Invalid expansion varname=${1} value=${2}" ${errRt}
+				printErrorAndExit "${FUNCNAME[0]} : Invalid expansion varname=${1} value=${2}" ${errRt}
 			fi
 			readonly ${1}
 		;;
 		TT_* )
 			#set a global variable
 			if ! eval export \'${1}\'='"${2}"'; then
-				printErrorAndExit "${FUNCNAME} : Invalid expansion varname=${1} value=${2}" ${errRt}
+				printErrorAndExit "${FUNCNAME[0]} : Invalid expansion varname=${1} value=${2}" ${errRt}
 			else
-				isVerbose && printVerbose "${FUNCNAME} : ${1}='${!1}'"
+				isVerbose && printVerbose "${FUNCNAME[0]} : ${1}='${!1}'"
 			fi
 		;;
 		* )
 			#other variables
-			printErrorAndExit "${FUNCNAME} : Invalid property or variable varname=${1} value=${2}" ${errRt}
+			printErrorAndExit "${FUNCNAME[0]} : Invalid property or variable varname=${1} value=${2}" ${errRt}
 		;;
 	esac
 	:
@@ -425,10 +425,10 @@ TTRO_help_isExisting='
 #	if called without argument'
 function isExisting {
 	if declare -p "${1}" &> /dev/null; then
-		isDebug && printDebug "$FUNCNAME $1 return 0"
+		isDebug && printDebug "${FUNCNAME[0]} $1 return 0"
 		return 0
 	else
-		isDebug && printDebug "$FUNCNAME $1 return 1"
+		isDebug && printDebug "${FUNCNAME[0]} $1 return 1"
 		return 1
 	fi
 }
@@ -446,10 +446,10 @@ TTRO_help_isNotExisting='
 #	if called without argument'
 function isNotExisting {
 	if declare -p "${1}" &> /dev/null; then
-		isDebug && printDebug "$FUNCNAME $1 return 1"
+		isDebug && printDebug "${FUNCNAME[0]} $1 return 1"
 		return 1
 	else
-		isDebug && printDebug "$FUNCNAME $1 return 0"
+		isDebug && printDebug "${FUNCNAME[0]} $1 return 0"
 		return 0
 	fi
 }
@@ -468,14 +468,14 @@ TTRO_help_isExistingAndTrue='
 function isExistingAndTrue {
 	if declare -p "${1}" &> /dev/null; then
 		if [[ -n ${!1} ]]; then
-			isDebug && printDebug "$FUNCNAME $1 return 0"
+			isDebug && printDebug "${FUNCNAME[0]} $1 return 0"
 			return 0
 		else
-			isDebug && printDebug "$FUNCNAME $1 return 1"
+			isDebug && printDebug "${FUNCNAME[0]} $1 return 1"
 			return 1
 		fi
 	else
-		isDebug && printDebug "$FUNCNAME $1 return 1"
+		isDebug && printDebug "${FUNCNAME[0]} $1 return 1"
 		return 1
 	fi
 }
@@ -494,14 +494,14 @@ TTRO_help_isExistingAndFalse='
 function isExistingAndFalse {
 	if declare -p "${1}" &> /dev/null; then
 		if [[ -z ${!1} ]]; then
-			isDebug && printDebug "$FUNCNAME $1 return 0"
+			isDebug && printDebug "${FUNCNAME[0]} $1 return 0"
 			return 0
 		else
-			isDebug && printDebug "$FUNCNAME $1 return 1"
+			isDebug && printDebug "${FUNCNAME[0]} $1 return 1"
 			return 1
 		fi
 	else
-		isDebug && printDebug "$FUNCNAME $1 return 1"
+		isDebug && printDebug "${FUNCNAME[0]} $1 return 1"
 		return 1
 	fi
 }
@@ -521,14 +521,14 @@ TTRO_help_isTrue='
 function isTrue {
 	if declare -p "${1}" &> /dev/null; then
 		if [[ -n ${!1} ]]; then
-			isDebug && printDebug "$FUNCNAME $1 return 0"
+			isDebug && printDebug "${FUNCNAME[0]} $1 return 0"
 			return 0
 		else
-			isDebug && printDebug "$FUNCNAME $1 return 1"
+			isDebug && printDebug "${FUNCNAME[0]} $1 return 1"
 			return 1
 		fi
 	else
-		printErrorAndExit "Variable $1 not exists" $errRt
+		printErrorAndExit "Variable $1 not exists" "${errRt}"
 	fi
 }
 readonly -f isTrue
@@ -547,14 +547,14 @@ TTRO_help_isFalse='
 function isFalse {
 	if declare -p "${1}" &> /dev/null; then
 		if [[ -z ${!1} ]]; then
-			isDebug && printDebug "$FUNCNAME $1 return 0"
+			isDebug && printDebug "${FUNCNAME[0]} $1 return 0"
 			return 0
 		else
-			isDebug && printDebug "$FUNCNAME $1 return 1"
+			isDebug && printDebug "${FUNCNAME[0]} $1 return 1"
 			return 1
 		fi
 	else
-		printErrorAndExit "Variable $1 not exists" $errRt
+		printErrorAndExit "Variable $1 not exists" "${errRt}"
 	fi
 }
 readonly -f isFalse
@@ -573,14 +573,14 @@ function isArray {
 	local v
 	if v=$(declare -p "${1}" 2> /dev/null); then
 		if [[ $v == declare\ -a* ]]; then
-			isDebug && printDebug "$FUNCNAME $1 return 0"
+			isDebug && printDebug "${FUNCNAME[0]} $1 return 0"
 			return 0
 		else
-			isDebug && printDebug "$FUNCNAME $1 return 1"
+			isDebug && printDebug "${FUNCNAME[0]} $1 return 1"
 			return 1
 		fi
 	else
-		isDebug && printDebug "$FUNCNAME $1 return 1"
+		isDebug && printDebug "${FUNCNAME[0]} $1 return 1"
 		return 1
 	fi
 }
@@ -600,14 +600,14 @@ function isAssociativeArray {
 	local v
 	if v=$(declare -p "${1}" 2> /dev/null); then
 		if [[ $v == declare\ -A* ]]; then
-			isDebug && printDebug "$FUNCNAME $1 return 0"
+			isDebug && printDebug "${FUNCNAME[0]} $1 return 0"
 			return 0
 		else
-			isDebug && printDebug "$FUNCNAME $1 return 1"
+			isDebug && printDebug "${FUNCNAME[0]} $1 return 1"
 			return 1
 		fi
 	else
-		isDebug && printDebug "$FUNCNAME $1 return 1"
+		isDebug && printDebug "${FUNCNAME[0]} $1 return 1"
 		return 1
 	fi
 }
@@ -625,10 +625,10 @@ TTRO_help_isFunction='
 #	if called without argument'
 function isFunction {
 	if declare -F "$1" &> /dev/null; then
-		isDebug && printDebug "$FUNCNAME $1 return 0"
+		isDebug && printDebug "${FUNCNAME[0]} $1 return 0"
 		return 0
 	else
-		isDebug && printDebug "$FUNCNAME $1 return 1"
+		isDebug && printDebug "${FUNCNAME[0]} $1 return 1"
 		return 1
 	fi
 }
@@ -646,8 +646,8 @@ TTRO_help_arrayHasKey='
 # Exits:
 #	exits if called with wrong number of arguments'
 function arrayHasKey {
-	if [[ $# -ne 2 ]]; then printErrorAndExit "$FUNCNAME must have 2 aruments" $errRt; fi
-	isDebug && printDebug "$FUNCNAME $1 $2"
+	if [[ $# -ne 2 ]]; then printErrorAndExit "${FUNCNAME[0]} must have 2 aruments" "${errRt}"; fi
+	isDebug && printDebug "${FUNCNAME[0]} $1 $2"
 	if ! isArray "$1" && ! isAssociativeArray "$1"; then
 		printErrorAndExit "variable $1 is not an array"
 	fi
@@ -660,7 +660,7 @@ function arrayHasKey {
 			break
 		fi
 	done
-	isDebug && printDebug "$FUNCNAME $1 return $in"
+	isDebug && printDebug "${FUNCNAME[0]} $1 return $in"
 	return $in
 }
 readonly -f arrayHasKey
@@ -681,11 +681,11 @@ TTRO_help_copyAndTransform='
 #		success(0)
 #	exits  if called with wrong arguments'
 function copyAndTransform {
-	printWarning "$FUNCNAME is deprecated use function 'copyAndMorph'"
-	if [[ $# -lt 3 ]]; then printErrorAndExit "$FUNCNAME missing params. Number of Params is $#" $errRt; fi
-	isDebug && printDebug "$FUNCNAME $*"
+	printWarning "${FUNCNAME[0]} is deprecated use function 'copyAndMorph'"
+	if [[ $# -lt 3 ]]; then printErrorAndExit "${FUNCNAME[0]} missing params. Number of Params is $#" "${errRt}"; fi
+	isDebug && printDebug "${FUNCNAME[0]} $*"
 	if [[ -z $3 && ( $# -gt 3 ) ]]; then
-		printWarning "$FUNCNAME: Empty variant identifier but there are pattern for file transformation"
+		printWarning "${FUNCNAME[0]}: Empty variant identifier but there are pattern for file transformation"
 	fi
 	local -a transformPattern=()
 	local -i max=$(($#+1))
@@ -701,7 +701,7 @@ function copyAndTransform {
 	fi
 	local dest=""
 	for x in $1/**; do #first create dir structure
-		isDebug && printDebug "$FUNCNAME item to process step1: $x"
+		isDebug && printDebug "${FUNCNAME[0]} item to process step1: $x"
 		if [[ -d $x ]]; then
 			dest="${x#$1}"
 			dest="$2/$dest"
@@ -717,12 +717,12 @@ function copyAndTransform {
 	local x
 	for x in $1/**; do
 		if [[ ! -d $x ]]; then
-			isDebug && printDebug "$FUNCNAME item to process step2: $x"
+			isDebug && printDebug "${FUNCNAME[0]} item to process step2: $x"
 			for ((i=0; i<${#transformPattern[@]}; i++)); do
-				isDebug && printDebug "$FUNCNAME: check transformPattern[$i]=${transformPattern[$i]}"
+				isDebug && printDebug "${FUNCNAME[0]}: check transformPattern[$i]=${transformPattern[$i]}"
 				match=0
 				if [[ $x == ${transformPattern[$i]} ]]; then
-					isDebug && printDebug "$FUNCNAME: check transformPattern[$i]=${transformPattern[$i]} Match found"
+					isDebug && printDebug "${FUNCNAME[0]}: check transformPattern[$i]=${transformPattern[$i]} Match found"
 					match=1
 				fi
 			done
@@ -731,7 +731,7 @@ function copyAndTransform {
 			if [[ match -eq 1 ]]; then
 				isVerbose && printVerbose "transform $x to $dest"
 				#if ! sed -e "s/\/\/*_${3}//g" "$x" > "$dest"; then
-				#	printErrorAndExit "$FUNCNAME Can not transform input=$x dest=$dest variant=$4" $errRt
+				#	printErrorAndExit "${FUNCNAME[0]} Can not transform input=$x dest=$dest variant=$4" "${errRt}"
 				#fi
 				{
 					local readResult=0
@@ -740,25 +740,25 @@ function copyAndTransform {
 						if ! read -r; then readResult=1; fi
 						part1="${REPLY%%//_$3_*}"
 						if [[ $part1 != $REPLY ]]; then
-							#isDebug && printDebug "$FUNCNAME: match line='$REPLY'"
+							#isDebug && printDebug "${FUNCNAME[0]}: match line='$REPLY'"
 							part2="${REPLY#*//_$3_}"
-							#isDebug && printDebug "$FUNCNAME: part2='$part2'"
+							#isDebug && printDebug "${FUNCNAME[0]}: part2='$part2'"
 							outline="${part1}${part2}"
 						else
 							part1="${REPLY%%//\!*_*}"
 							if [[ $part1 != $REPLY ]]; then
-								#isDebug && printDebug "$FUNCNAME: 2nd match line='$REPLY'"
+								#isDebug && printDebug "${FUNCNAME[0]}: 2nd match line='$REPLY'"
 								partx="${REPLY%%//\!$3_*}"
 								if [[ $partx != $REPLY ]]; then
-									#isDebug && printDebug "$FUNCNAME: negative match line='$REPLY' '$partx'"
+									#isDebug && printDebug "${FUNCNAME[0]}: negative match line='$REPLY' '$partx'"
 									outline="$REPLY"
 								else
 									part2="${REPLY#*//\!*_}"
-									#isDebug && printDebug "$FUNCNAME: part2='$part2'"
+									#isDebug && printDebug "${FUNCNAME[0]}: part2='$part2'"
 									outline="${part1}${part2}"
 								fi
 							else
-								#isDebug && printDebug "$FUNCNAME: no match line='$REPLY'"
+								#isDebug && printDebug "${FUNCNAME[0]}: no match line='$REPLY'"
 								outline="$REPLY"
 							fi
 						fi
@@ -797,10 +797,10 @@ TTRO_help_copyAndMorph='
 #		success(0)
 #	exits  if called with wrong arguments'
 function copyAndMorph {
-	if [[ $# -lt 3 ]]; then printErrorAndExit "$FUNCNAME missing params. Number of Params is $#" $errRt; fi
-	isDebug && printDebug "$FUNCNAME $*"
+	if [[ $# -lt 3 ]]; then printErrorAndExit "${FUNCNAME[0]} missing params. Number of Params is $#" "${errRt}"; fi
+	isDebug && printDebug "${FUNCNAME[0]} $*"
 	if [[ -z $3 && ( $# -gt 3 ) ]]; then
-		printWarning "$FUNCNAME: Empty variant identifier but there are pattern for file transformation"
+		printWarning "${FUNCNAME[0]}: Empty variant identifier but there are pattern for file transformation"
 	fi
 	local -a transformPattern=()
 	local -i max=$(($#+1))
@@ -818,7 +818,7 @@ function copyAndMorph {
 	local x
 	for x in $1/**; do #first create dir structure
 		if [[ -d $x ]]; then
-			isDebug && printDebug "$FUNCNAME item to process step1 create dir structure: $x"
+			isDebug && printDebug "${FUNCNAME[0]} item to process step1 create dir structure: $x"
 			dest="${x#$1}"
 			dest="$2/$dest"
 			echo $dest
@@ -832,12 +832,12 @@ function copyAndMorph {
 	local match=""
 	for x in $1/**; do
 		if [[ ! -d $x ]]; then
-			isDebug && printDebug "$FUNCNAME item to process step2 copy/transform: $x"
+			isDebug && printDebug "${FUNCNAME[0]} item to process step2 copy/transform: $x"
 			match=''
 			for ((i=0; i<${#transformPattern[@]}; i++)); do
-				isDebug && printDebug "$FUNCNAME: check transformPattern[$i]=${transformPattern[$i]}"
+				isDebug && printDebug "${FUNCNAME[0]}: check transformPattern[$i]=${transformPattern[$i]}"
 				if [[ $x == ${transformPattern[$i]} ]]; then
-					isDebug && printDebug "$FUNCNAME: check transformPattern[$i]=${transformPattern[$i]} Match found"
+					isDebug && printDebug "${FUNCNAME[0]}: check transformPattern[$i]=${transformPattern[$i]} Match found"
 					match='true'
 					break;
 				fi
@@ -874,9 +874,9 @@ TTRO_help_morphFile='
 #		success(0)
 #	exits  if called with wrong arguments'
 function morphFile {
-	if [[ $# -ne 3 ]]; then printErrorAndExit "$FUNCNAME missing params. Number of Params is $#" $errRt; fi
-	if [[ -z $3 ]]; then printErrorAndExit "$FUNCNAME wrong params. Empty variant identifier" $errRt; fi
-	isDebug && printDebug "$FUNCNAME $*"
+	if [[ $# -ne 3 ]]; then printErrorAndExit "${FUNCNAME[0]} missing params. Number of Params is $#" "${errRt}"; fi
+	if [[ -z $3 ]]; then printErrorAndExit "${FUNCNAME[0]} wrong params. Empty variant identifier" "${errRt}"; fi
+	isDebug && printDebug "${FUNCNAME[0]} $*"
 	rm -f "$2"
 	{
 		local readResult=0
@@ -924,12 +924,12 @@ function morphFile {
 					varname="${BASH_REMATCH[1]}"
 					templine="${BASH_REMATCH[2]}"
 					if [[ $varname =~ [[:space:]] ]]; then
-						printErrorAndExit "Invalid variable name: $varname in file: $1 linenumber: $linenumber line: $REPLY" $errRt
+						printErrorAndExit "Invalid variable name: $varname in file: $1 linenumber: $linenumber line: $REPLY" "${errRt}"
 					else
 						if trans=$(eval echo -n "\"\$$varname\""); then
 							outline2="${outline2}${trans}"
 						else
-							printErrorAndExit "Invalid assignemtnet: \"\$$varname\" in file: $1 linenumber: $linenumber line: $REPLY" $errRt
+							printErrorAndExit "Invalid assignemtnet: \"\$$varname\" in file: $1 linenumber: $linenumber line: $REPLY" "${errRt}"
 						fi
 					fi
 				done
@@ -967,8 +967,8 @@ TTRO_help_linewisePatternMatch='
 #	return false if no complete pattern match was found or the file not exists'
 declare -a TTTT_patternList=()
 function linewisePatternMatch {
-	if [[ $# -lt 3 ]]; then printErrorAndExit "$FUNCNAME missing params. Number of Params is $#" $errRt; fi
-	isDebug && printDebug "$FUNCNAME $*"
+	if [[ $# -lt 3 ]]; then printErrorAndExit "${FUNCNAME[0]} missing params. Number of Params is $#" "${errRt}"; fi
+	isDebug && printDebug "${FUNCNAME[0]} $*"
 	local -i max=$#
 	local -i i
 	local -i noPattern=0
@@ -1019,7 +1019,7 @@ function linewisePatternMatchInterceptAndSuccess {
 		TTTT_result=0
 	else
 		TTTT_result=$?
-		setFailure "Not enough matches: '$FUNCNAME $1 $2 ...'"
+		setFailure "Not enough matches: '${FUNCNAME[0]} $1 $2 ...'"
 	fi
 	return 0
 }
@@ -1038,7 +1038,7 @@ TTRO_help_linewisePatternMatchInterceptAndError='
 function linewisePatternMatchInterceptAndError {
 	if linewisePatternMatch "$@" 3>&1 1>&2 2>&3; then
 		TTTT_result=0
-		setFailure "Match found: '$FUNCNAME $1 $2 ...'"
+		setFailure "Match found: '${FUNCNAME[0]} $1 $2 ...'"
 	else
 		TTTT_result=$?
 	fi
@@ -1058,14 +1058,14 @@ TTRO_help_linewisePatternMatchArray='
 #	return false if no complete pattern match was found or the file not exists
 #	exits if TTTT_patternList is empty or not existent'
 function linewisePatternMatchArray {
-	if [[ $# -ne 2 ]]; then printErrorAndExit "$FUNCNAME invalid no of params. Number of Params is $#" $errRt; fi
-	isDebug && printDebug "$FUNCNAME $*"
+	if [[ $# -ne 2 ]]; then printErrorAndExit "${FUNCNAME[0]} invalid no of params. Number of Params is $#" "${errRt}"; fi
+	isDebug && printDebug "${FUNCNAME[0]} $*"
 	local -i i
 	local -i noPattern=${#TTTT_patternList[@]}
 	local -a patternMatched=()
-	if [[ $noPattern -eq 0 ]]; then printErrorAndExit "$FUNCNAME TTTT_patternList must not be empty" $errRt; fi
-	for ((i=0; i<$noPattern; i++)); do
-		patternMatched[$i]=''
+	if [[ $noPattern -eq 0 ]]; then printErrorAndExit "${FUNCNAME[0]} TTTT_patternList must not be empty" "${errRt}"; fi
+	for ((i=0; i<noPattern; i++)); do
+		patternMatched[i]=''
 	done
 	if isDebug; then
 		local display=$(declare -p TTTT_patternList);
@@ -1082,11 +1082,11 @@ function linewisePatternMatchArray {
 				if [[ ( result -eq 0 ) || ( ${#REPLY} -gt 0 ) ]]; then
 					line=$((line+1))
 					isDebug && printDebug "$REPLY"
-					for ((i=0; i<$noPattern; i++)); do
+					for ((i=0; i<noPattern; i++)); do
 						if [[ -z ${patternMatched[$i]} && ( $REPLY == ${TTTT_patternList[$i]} ) ]]; then
-							patternMatched[$i]='true'
+							patternMatched[i]='true'
 							matches=$((matches+1))
-							echo "$FUNCNAME : Pattern[$i]='${TTTT_patternList[$i]}' matches line=$line in file=$1"
+							echo "${FUNCNAME[0]} : Patternmatch: file=$1 line=$line Pattern[$i]='${TTTT_patternList[$i]}'"
 							if [[ -z $2 ]]; then
 								break 2
 							fi
@@ -1098,32 +1098,39 @@ function linewisePatternMatchArray {
 				fi
 			done
 		} < "$1"
-		local noMatchIn=''
-		for ((i=0; i<$noPattern; i++)); do
-			if [[ -z ${patternMatched[$i]} ]]; then
-				noMatchIn="$noMatchIn $i"
-			fi
-		done
 		if [[ $2 == 'true' ]]; then
 			if [[ $matches -eq $noPattern ]]; then
-				echo "$FUNCNAME : $matches matches found in file=$1"
+				echo "${FUNCNAME[0]} : $matches matches found in file=$1"
 				return 0
 			else
-				echo "$FUNCNAME : Only $matches of $noPattern pattern maches found in file=$1" >&2
-				echo "$FUNCNAME no matches for pattern $noMatchIn" >&2
+				local noMatchIn=''
+				for ((i=0; i<noPattern; i++)); do
+					if [[ -z ${patternMatched[$i]} ]]; then
+						noMatchIn="$noMatchIn $i"
+					fi
+				done
+				echo "${FUNCNAME[0]} : Only $matches of $noPattern pattern matches found in file=$1" >&2
+				echo "${FUNCNAME[0]} no matches for pattern $noMatchIn" >&2
+				local x
+				for i in ${noMatchIn}; do
+					echo "${FUNCNAME[0]} FAILURE: no match for pattern ${TTTT_patternList[$i]}" >&2
+				done
 				return $errTestFail
 			fi
 		else
 			if [[ $matches -gt 0 ]]; then
-				echo "$FUNCNAME : $matches matches found in file=$1"
+				echo "${FUNCNAME[0]} : $matches matches found in file=$1"
 				return 0
 			else
-				echo "$FUNCNAME : No match found in file=$1"
+				echo "${FUNCNAME[0]} : No match found in file=$1"
+				for ((i=0; i<noPattern; i++)); do
+					echo "${FUNCNAME[0]} FAILURE: no match for pattern ${TTTT_patternList[$i]}" >&2
+				done
 				return $errTestFail
 			fi
 		fi
 	else
-		echo "$FUNCNAME: can not open file $1" >&2
+		echo "${FUNCNAME[0]}: can not open file $1" >&2
 		return $errTestFail
 	fi
 }
@@ -1143,7 +1150,7 @@ TTRO_help_echoAndExecute='
 #	if the function is not guarded with conditional statement and the executed command returns an error code'
 function echoAndExecute {
 	if [[ $# -lt 1 || -z $1 ]]; then
-		printErrorAndExit "${FUNCNAME[0]} called with no or empty command" $errRt
+		printErrorAndExit "${FUNCNAME[0]} called with no or empty command" "${errRt}"
 	fi
 	local cmd="$1"
 	shift
@@ -1168,7 +1175,7 @@ TTRO_help_echoExecuteAndIntercept='
 #	TTTT_result - the result code of the executed command'
 function echoExecuteAndIntercept {
 	if [[ $# -lt 1 || -z $1 ]]; then
-		printErrorAndExit "${FUNCNAME[0]} called with no or empty command" $errRt
+		printErrorAndExit "${FUNCNAME[0]} called with no or empty command" "${errRt}"
 	fi
 	local cmd="$1"
 	shift
@@ -1201,7 +1208,7 @@ TTRO_help_echoExecuteInterceptAndSuccess='
 #	The failure condition is set if the command returns failure'
 function echoExecuteInterceptAndSuccess {
 	if [[ $# -lt 1 || -z $1 ]]; then
-		printErrorAndExit "${FUNCNAME[0]} called with no or empty command" $errRt
+		printErrorAndExit "${FUNCNAME[0]} called with no or empty command" "${errRt}"
 	fi
 	local cmd="$1"
 	shift
@@ -1235,7 +1242,7 @@ TTRO_help_echoExecuteInterceptAndError='
 #	The failure condition is set if the command returns success'
 function echoExecuteInterceptAndError {
 	if [[ $# -lt 1 || -z $1 ]]; then
-		printErrorAndExit "${FUNCNAME[0]} called with no or empty command" $errRt
+		printErrorAndExit "${FUNCNAME[0]} called with no or empty command" "${errRt}"
 	fi
 	local cmd="$1"
 	shift
@@ -1274,11 +1281,11 @@ TTRO_help_echoExecuteAndIntercept2='
 #'
 function echoExecuteAndIntercept2 {
 	if [[ $# -lt 2 || -z $2 ]]; then
-		printErrorAndExit "${FUNCNAME[0]} called with no or empty command" $errRt
+		printErrorAndExit "${FUNCNAME[0]} called with no or empty command" "${errRt}"
 	fi
 	if [[ $1 != success && $1 != error && $1 != X ]]; then
 		if ! isNumber "$1" ]]; then
-			printErrorAndExit "${FUNCNAME[0]} called with wrong parameters: $*" $errRt
+			printErrorAndExit "${FUNCNAME[0]} called with wrong parameters: $*" "${errRt}"
 		fi
 	fi
 	local code="$1"
@@ -1296,7 +1303,7 @@ function echoExecuteAndIntercept2 {
 	case "$code" in
 		success)
 			if [[ $myresult -eq 0 ]]; then
-				isDebug && printDebug "${FUNCNAME} success"
+				isDebug && printDebug "${FUNCNAME[0]} success"
 			else
 				setFailure "${FUNCNAME[0]} Unexpected failure $myresult in cmd $*"
 			fi;;
@@ -1304,13 +1311,13 @@ function echoExecuteAndIntercept2 {
 			if [[ $myresult -eq 0 ]]; then
 				setFailure "${FUNCNAME[0]} Unexpected success in cmd $*"
 			else
-				isDebug && printDebug "${FUNCNAME} success"
+				isDebug && printDebug "${FUNCNAME[0]} success"
 			fi;;
 		X)
-			isDebug && printDebug "${FUNCNAME} success";;
+			isDebug && printDebug "${FUNCNAME[0]} success";;
 		*)
 			if [[ $myresult -eq $code ]]; then
-				isDebug && printDebug "${FUNCNAME} success"
+				isDebug && printDebug "${FUNCNAME[0]} success"
 			else
 				setFailure "${FUNCNAME[0]} wrong failure code $myresult in cmd $*"
 			fi;;
@@ -1336,7 +1343,7 @@ TTRO_help_executeAndLog='
 #	TTTT_result - the result code of the executed command'
 function executeAndLog {
 	if [[ $# -lt 1 || -z $1 ]]; then
-		printErrorAndExit "${FUNCNAME[0]} called with no or empty command" $errRt
+		printErrorAndExit "${FUNCNAME[0]} called with no or empty command" "${errRt}"
 	fi
 	local cmd="$1"
 	shift
@@ -1371,7 +1378,7 @@ TTRO_help_executeLogAndSuccess='
 #	The failure condition is set if the command returns failure'
 function executeLogAndSuccess {
 	if [[ $# -lt 1 || -z $1 ]]; then
-		printErrorAndExit "${FUNCNAME[0]} called with no or empty command" $errRt
+		printErrorAndExit "${FUNCNAME[0]} called with no or empty command" "${errRt}"
 	fi
 	local cmd="$1"
 	shift
@@ -1407,7 +1414,7 @@ TTRO_help_executeLogAndError='
 #	The failure condition is set if the command returns success'
 function executeLogAndError {
 	if [[ $# -lt 1 || -z $1 ]]; then
-		printErrorAndExit "${FUNCNAME[0]} called with no or empty command" $errRt
+		printErrorAndExit "${FUNCNAME[0]} called with no or empty command" "${errRt}"
 	fi
 	local cmd="$1"
 	shift
@@ -1431,8 +1438,8 @@ TTRO_help_renameInSubdirs='
 #	$2 the source filename
 #	$3 the destination filename'
 function renameInSubdirs {
-	if [[ $# -ne 3 ]]; then printErrorAndExit "$FUNCNAME invalid no of params. Number of Params is $#" $errRt; fi
-	isDebug && printDebug "$FUNCNAME $*"
+	if [[ $# -ne 3 ]]; then printErrorAndExit "${FUNCNAME[0]} invalid no of params. Number of Params is $#" "${errRt}"; fi
+	isDebug && printDebug "${FUNCNAME[0]} $*"
 	local x mdir destf
 	for x in $1/**/$2; do
 		mdir="${x%/*}"
@@ -1450,10 +1457,10 @@ TTRO_help_isInList='
 #	returns true if the token was in the list; false otherwise
 #	exits if called with wrong parameters'
 function isInList {
-	if [[ $# -ne 2 ]]; then printErrorAndExit "$FUNCNAME invalid no of params. Number of Params is $#" $errRt; fi
-	isDebug && printDebug "$FUNCNAME $*"
+	if [[ $# -ne 2 ]]; then printErrorAndExit "${FUNCNAME[0]} invalid no of params. Number of Params is $#" "${errRt}"; fi
+	isDebug && printDebug "${FUNCNAME[0]} $*"
 	if [[ $1 == *[[:space:]]* ]]; then
-		printErrorAndExit "The token \$1 must not be empty and must not have spaces \$1='$1'" $errRt
+		printErrorAndExit "The token \$1 must not be empty and must not have spaces \$1='$1'" "${errRt}"
 	else
 		local x
 		local isFound=''
@@ -1464,10 +1471,10 @@ function isInList {
 			fi
 		done
 		if [[ -n $isFound ]]; then
-			isDebug && printDebug "$FUNCNAME return 0"
+			isDebug && printDebug "${FUNCNAME[0]} return 0"
 			return 0
 		else
-			isDebug && printDebug "$FUNCNAME return 1"
+			isDebug && printDebug "${FUNCNAME[0]} return 1"
 			return 1
 		fi
 	fi
@@ -1481,10 +1488,10 @@ TTRO_help_isInPatternList='
 #	returns true if the token was in the list; false otherwise
 #	exits if called with wrong parameters'
 function isInPatternList {
-	if [[ $# -ne 2 ]]; then printErrorAndExit "$FUNCNAME invalid no of params. Number of Params is $#" $errRt; fi
-	isDebug && printDebug "$FUNCNAME $*"
+	if [[ $# -ne 2 ]]; then printErrorAndExit "${FUNCNAME[0]} invalid no of params. Number of Params is $#" "${errRt}"; fi
+	isDebug && printDebug "${FUNCNAME[0]} $*"
 	if [[ $1 == *[[:space:]]* ]]; then
-		printErrorAndExit "The token \$1 must not be empty and must not have spaces \$1='$1'" $errRt
+		printErrorAndExit "The token \$1 must not be empty and must not have spaces \$1='$1'" "${errRt}"
 	else
 		local x
 		local isFound=''
@@ -1497,10 +1504,10 @@ function isInPatternList {
 		done
 		set +f
 		if [[ -n $isFound ]]; then
-			isDebug && printDebug "$FUNCNAME return 0"
+			isDebug && printDebug "${FUNCNAME[0]} return 0"
 			return 0
 		else
-			isDebug && printDebug "$FUNCNAME return 1"
+			isDebug && printDebug "${FUNCNAME[0]} return 1"
 			return 1
 		fi
 	fi
@@ -1515,10 +1522,10 @@ TTRO_help_isInListSeparator='
 #	returns true if the token was in the list; false otherwise
 #	exits if called with wrong parameters'
 function isInListSeparator {
-	if [[ $# -ne 3 ]]; then printErrorAndExit "$FUNCNAME invalid no of params. Number of Params is $#" $errRt; fi
-	isDebug && printDebug "$FUNCNAME $*"
+	if [[ $# -ne 3 ]]; then printErrorAndExit "${FUNCNAME[0]} invalid no of params. Number of Params is $#" "${errRt}"; fi
+	isDebug && printDebug "${FUNCNAME[0]} $*"
 	if [[ $1 == *[$3]* ]]; then
-		printErrorAndExit "The token \$1 must not be empty and must not have separator characters \$1='$1'" $errRt
+		printErrorAndExit "The token \$1 must not be empty and must not have separator characters \$1='$1'" "${errRt}"
 	else
 		local x
 		local isFound=''
@@ -1530,10 +1537,10 @@ function isInListSeparator {
 			fi
 		done
 		if [[ -n $isFound ]]; then
-			isDebug && printDebug "$FUNCNAME return 0"
+			isDebug && printDebug "${FUNCNAME[0]} return 0"
 			return 0
 		else
-			isDebug && printDebug "$FUNCNAME return 1"
+			isDebug && printDebug "${FUNCNAME[0]} return 1"
 			return 1
 		fi
 	fi
@@ -1546,8 +1553,8 @@ TTRO_help_import='
 #	sources the file if it was not in TT_tools
 #	return the result code of the source command'
 function import {
-	isDebug && printDebug "$FUNCNAME $*"
-	[[ $# -ne 1 ]] && printErrorAndExit "$FUNCNAME invalid no of params. Number of Params is $#" $errRt
+	isDebug && printDebug "${FUNCNAME[0]} $*"
+	[[ $# -ne 1 ]] && printErrorAndExit "${FUNCNAME[0]} invalid no of params. Number of Params is $#" "${errRt}"
 	local TTTT_trim
 	trim "$1"
 	local componentName="${TTTT_trim##*/}"
@@ -1572,7 +1579,7 @@ function import {
 		done
 	fi
 	if [[ -z $filename ]]; then
-		printErrorAndExit "$FUNCNAME: no readable file found for module '$TTTT_trim' in search path '$TTXX_searchPath'" $errRt
+		printErrorAndExit "${FUNCNAME[0]}: no readable file found for module '$TTTT_trim' in search path '$TTXX_searchPath'" "${errRt}"
 	else
 		printInfo "Module $componentName import found here: $filename"
 		TTXX_modulesImported="$TTXX_modulesImported $componentName"
@@ -1595,7 +1602,7 @@ TTRO_help_waitForFileToAppear='
 # Exits:
 # if the function was called with invalid parameters'
 function waitForFileToAppear {
-	if [[ ( $# -lt 1 ) || ( $# -gt 2 ) ]]; then printErrorAndExit "$FUNCNAME invalid no of params. Number of Params is $#" $errRt; fi
+	if [[ ( $# -lt 1 ) || ( $# -gt 2 ) ]]; then printErrorAndExit "${FUNCNAME[0]} invalid no of params. Number of Params is $#" "${errRt}"; fi
 	local timeoutValue=3
 	if [[ $# -eq 2 ]]; then
 		timeoutValue="$2"
@@ -1621,7 +1628,7 @@ TTRO_help_getLineCount='
 # Side Effects:
 #	TTTT_lineCount - the number of lines in the file'
 function getLineCount {
-	if [[ $# -ne 1 ]]; then printErrorAndExit "$FUNCNAME invalid no of params. Number of Params is $#" $errRt; fi
+	if [[ $# -ne 1 ]]; then printErrorAndExit "${FUNCNAME[0]} invalid no of params. Number of Params is $#" "${errRt}"; fi
 	TTTT_lineCount=$(wc -l "$1" | cut -f 1 -d ' ')
 }
 readonly -f getLineCount
@@ -1675,7 +1682,7 @@ TTRO_help_getSystemLoad100='
 function getSystemLoad100 {
 	getSystemLoad
 	local integer=${TTTT_systemLoad%%.*}
-	[[ -z $integer ]] && printErrorAndExit "No valid TTTT_systemLoad : $TTTT_systemLoad" $errRt
+	[[ -z $integer ]] && printErrorAndExit "No valid TTTT_systemLoad : $TTTT_systemLoad" "${errRt}"
 	local fraction=0
 	if [[ $TTTT_systemLoad != $integer ]]; then
 		fraction=${TTTT_systemLoad#*.}
@@ -1702,7 +1709,7 @@ TTRO_help_timeFromSeconds='
 #		TTTT_timeFromSeconds the formated string
 #		success'
 function timeFromSeconds {
-	if [[ $# -ne 1 ]]; then printErrorAndExit "$FUNCNAME invalid no of params. Number of Params is $#" $errRt; fi
+	if [[ $# -ne 1 ]]; then printErrorAndExit "${FUNCNAME[0]} invalid no of params. Number of Params is $#" "${errRt}"; fi
 	local seconds="$1"
 	local sec=$((seconds%60))
 	if [[ ${#sec} -eq 1 ]]; then sec="0$sec"; fi
@@ -1723,7 +1730,7 @@ TTRO_help_getElapsedTime='
 #	return
 #		TTTT_elapsedTime'
 function getElapsedTime {
-	if [[ $# -ne 1 ]]; then printErrorAndExit "$FUNCNAME : wrong no of arguments $#" $errRt; fi
+	if [[ $# -ne 1 ]]; then printErrorAndExit "${FUNCNAME[0]} : wrong no of arguments $#" "${errRt}"; fi
 	local psres="$errSigint"
 	local now=''
 	while [[ $psres -eq $errSigint ]]; do
@@ -1749,13 +1756,13 @@ TTRO_help_checkAllFilesExist='
 # Side Effects_
 #	The failure condition is set one file is missing'
 checkAllFilesExist() {
-	if [[ $# -ne 2 ]]; then printErrorAndExit "$FUNCNAME : wrong number of params $#" $errRt; fi
+	if [[ $# -ne 2 ]]; then printErrorAndExit "${FUNCNAME[0]} : wrong number of params $#" "${errRt}"; fi
 	local x
 	for x in $2; do
 		if [[ -e "$1/$x" ]]; then
-			printInfo "$FUNCNAME : Found file $1/$x"
+			printInfo "${FUNCNAME[0]} : Found file $1/$x"
 		else
-			setFailure "$FUNCNAME : File not found $1/$x"
+			setFailure "${FUNCNAME[0]} : File not found $1/$x"
 			break
 		fi
 	done
@@ -1775,15 +1782,15 @@ TTRO_help_checkAllFilesEqual='
 # Side Effects_
 #	The failure condition is set one file is missing or differs'
 checkAllFilesEqual() {
-	if [[ $# -ne 3 ]]; then printErrorAndExit "$FUNCNAME : wrong number of params $#" $errRt; fi
+	if [[ $# -ne 3 ]]; then printErrorAndExit "${FUNCNAME[0]} : wrong number of params $#" "${errRt}"; fi
 	local x f1 f2
 	for x in $3; do
 		f1="$1/$x"
 		f2="$2/$x"
 		if diff "$f1" "$f2"; then
-			printInfo "$FUNCNAME : Files equal $f1 $f2"
+			printInfo "${FUNCNAME[0]} : Files equal $f1 $f2"
 		else
-			setFailure "$FUNCNAME : Files not equal $f1 $f2"
+			setFailure "${FUNCNAME[0]} : Files not equal $f1 $f2"
 			break
 		fi
 	done
@@ -1802,16 +1809,16 @@ TTRO_help_checkLineCount='
 # Side Effects_
 #	The failure condition is set if the line count is not the expected or the file does not exists'
 checkLineCount() {
-	if [[ $# -ne 2 ]]; then printErrorAndExit "$FUNCNAME : wrong number of params $#" $errRt; fi
+	if [[ $# -ne 2 ]]; then printErrorAndExit "${FUNCNAME[0]} : wrong number of params $#" "${errRt}"; fi
 	if [[ -f $1 ]]; then
 		local x=$(wc -l "$1" | cut -f 1 -d ' ')
 		if [[ $x -eq $2 ]]; then
-			printInfo "$FUNCNAME : Expected line count in file $1 is correct $2"
+			printInfo "${FUNCNAME[0]} : Expected line count in file $1 is correct $2"
 		else
-			setFailure "$FUNCNAME : Expected line count in file $1 is $2 ; but line count is $x"
+			setFailure "${FUNCNAME[0]} : Expected line count in file $1 is $2 ; but line count is $x"
 		fi
 	else
-		setFailure "$FUNCNAME : File not found $1 or is no regular file"
+		setFailure "${FUNCNAME[0]} : File not found $1 or is no regular file"
 	fi
 	return 0
 }
@@ -1832,8 +1839,8 @@ TTRO_help_findTokenInFiles='
 #	a file is not readable
 #	if no files are scanned and $2 was true'
 findTokenInFiles() {
-	if [[ $# -lt 2 ]]; then printErrorAndExit "$FUNCNAME : wrong number of params $#" $errRt; fi
-	if [[ -z $2 ]]; then printErrorAndExit "$FUNCNAME : the token \$2 must not be empty" $errRt; fi
+	if [[ $# -lt 2 ]]; then printErrorAndExit "${FUNCNAME[0]} : wrong number of params $#" "${errRt}"; fi
+	if [[ -z $2 ]]; then printErrorAndExit "${FUNCNAME[0]} : the token \$2 must not be empty" "${errRt}"; fi
 	local exitOnZeroFiles="$1"; shift
 	local token="$1"; shift
 	local filesChecked=''
@@ -1848,12 +1855,12 @@ findTokenInFiles() {
 				return 0
 			fi
 		else
-			printErrorAndExit "$FUNCNAME : file: '$myfile' does not exist or is not readable"  $errRt
+			printErrorAndExit "${FUNCNAME[0]} : file: '$myfile' does not exist or is not readable"  "${errRt}"
 		fi
 	done
 	if [[ $fcount -eq 0 ]]; then
 		if [[ $exitOnZeroFiles ]]; then
-			printErrorAndExit "$FUNCNAME : No files to search" $errRt
+			printErrorAndExit "${FUNCNAME[0]} : No files to search" "${errRt}"
 		else
 			printWarning "Token '$token' not found in $fcount files. Checked files: $filesChecked"
 		fi
@@ -1880,9 +1887,9 @@ TTRO_help_findTokenInDirs='
 #	a file is not readable
 if no files are scanned and $3 was true'
 findTokenInDirs() {
-	if [[ $# -lt 3 ]]; then printErrorAndExit "$FUNCNAME : wrong number of params $#" $errRt; fi
-	if [[ -z $2 ]]; then printErrorAndExit "$FUNCNAME : \$2 must not be empty" $errRt; fi
-	if [[ -z $3 ]]; then printErrorAndExit "$FUNCNAME : \$3 must not be empty" $errRt; fi
+	if [[ $# -lt 3 ]]; then printErrorAndExit "${FUNCNAME[0]} : wrong number of params $#" "${errRt}"; fi
+	if [[ -z $2 ]]; then printErrorAndExit "${FUNCNAME[0]} : \$2 must not be empty" "${errRt}"; fi
+	if [[ -z $3 ]]; then printErrorAndExit "${FUNCNAME[0]} : \$3 must not be empty" "${errRt}"; fi
 	local exitOnZeroFiles="$1";
 	local token="$2";
 	local wildcard="$3"
@@ -1896,7 +1903,7 @@ findTokenInDirs() {
 				fileList="$fileList $myfile"
 			done
 		else
-			printErrorAndExit "Directory '$mydir' does not exists or is not a direcrtory" $errRt
+			printErrorAndExit "Directory '$mydir' does not exists or is not a direcrtory" "${errRt}"
 		fi
 	done
 	if findTokenInFiles "$exitOnZeroFiles" "$token" $fileList; then
@@ -1922,7 +1929,7 @@ TTRO_help_checkTokenIsInFiles='
 #	a file is not readable
 #	if no files are scanned and $2 was true'
 checkTokenIsInFiles() {
-	isDebug && printDebug "$FUNCNAME $*"
+	isDebug && printDebug "${FUNCNAME[0]} $*"
 	local cond="$1"
 	local tok="$2"
 	shift 2
@@ -1950,7 +1957,7 @@ TTRO_help_checkTokenIsNotInFiles='
 #	a file is not readable
 #	if no files are scanned and $2 was true'
 checkTokenIsNotInFiles() {
-	isDebug && printDebug "$FUNCNAME $*"
+	isDebug && printDebug "${FUNCNAME[0]} $*"
 	local cond="$1"
 	local tok="$2"
 	shift 2
@@ -1979,7 +1986,7 @@ TTRO_help_checkTokenIsInDirs='
 #	a file is not readable
 if no files are scanned and $3 was true'
 checkTokenIsInDirs() {
-	isDebug && printDebug "$FUNCNAME $*"
+	isDebug && printDebug "${FUNCNAME[0]} $*"
 	local cond="$1"
 	local tok="$2"
 	local wc="$3"
@@ -2009,7 +2016,7 @@ TTRO_help_checkTokenIsNotInDirs='
 #	a file is not readable
 if no files are scanned and $3 was true'
 checkTokenIsNotInDirs() {
-	isDebug && printDebug "$FUNCNAME $*"
+	isDebug && printDebug "${FUNCNAME[0]} $*"
 	local cond="$1";
 	local tok="$2";
 	local wc="$3"
@@ -2030,8 +2037,8 @@ TTRO_help_arrayAppend='
 # $2 First value to appends
 # ... optional more values to append may follow'
 arrayAppend() {
-	[[ $# -lt 2 ]] && printErrorAndExit "$FUNCNAME: not enough parameters" $errRt
-	isArray "$1" || printErrorAndExit "$FUNCNAME: $1 must be an indexed array" $errRt
+	[[ $# -lt 2 ]] && printErrorAndExit "${FUNCNAME[0]}: not enough parameters" "${errRt}"
+	isArray "$1" || printErrorAndExit "${FUNCNAME[0]}: $1 must be an indexed array" "${errRt}"
 	local arrname="$1"
 	shift
 	while [[ $# -gt 0 ]]; do
@@ -2049,13 +2056,13 @@ TTRO_help_arrayInsert='
 # $3 First value to inserts
 # ... optional more elements to insert'
 arrayInsert() {
-	[[ $# -lt 3 ]] && printErrorAndExit "$FUNCNAME: parameters!" $errRt
-	isArray "$1" || printErrorAndExit "$FUNCNAME: $1 must be an indexed array" $errRt
+	[[ $# -lt 3 ]] && printErrorAndExit "${FUNCNAME[0]}: parameters!" "${errRt}"
+	isArray "$1" || printErrorAndExit "${FUNCNAME[0]}: $1 must be an indexed array" "${errRt}"
 	local arrname="$1"
 	local first="$2"
 	local num=$(( $# - 2 ))
 	eval "local arrlen=\${#$arrname[@]}"
-	[[ $first -gt $arrlen ]] && printErrorAndExit "$FUNCNAME index to insert $first must not be greater than array len $arrlen" $errRt
+	[[ $first -gt $arrlen ]] && printErrorAndExit "${FUNCNAME[0]} index to insert $first must not be greater than array len $arrlen" "${errRt}"
 	# move elements num places forward
 	local i
 	local fromIndex=$first
@@ -2080,12 +2087,12 @@ TTRO_help_arrayDelete='
 #	$1 The name of the array
 # $2 Index to delete'
 arrayDelete() {
-	[[ $# -ne 2 ]] && printErrorAndExit "$FUNCNAME: parameters!" $errRt
-	isArray "$1" || printErrorAndExit "$FUNCNAME: $1 must be an indexed array" $errRt
+	[[ $# -ne 2 ]] && printErrorAndExit "${FUNCNAME[0]}: parameters!" "${errRt}"
+	isArray "$1" || printErrorAndExit "${FUNCNAME[0]}: $1 must be an indexed array" "${errRt}"
 	local arrname="$1"
 	local first="$2"
 	eval "local arrlen=\${#$arrname[@]}"
-	[[ $first -ge $arrlen ]] && printWarning "$FUNCNAME index to delete $first must not be greater or equal the array len $arrlen"
+	[[ $first -ge $arrlen ]] && printWarning "${FUNCNAME[0]} index to delete $first must not be greater or equal the array len $arrlen"
 	local i
 	for ((i=first; i<arrlen; i++)); do
 		local nextindex=$((i+1))
@@ -2103,7 +2110,7 @@ TTRO_help_trim='
 #	$1	the input string
 #	returns the result string in TTTT_trim'
 function trim {
-	if [[ $# -ne 1 ]]; then printErrorAndExit "$FUNCNAME invalid no of params. Number of Params is $#" $errRt; fi
+	if [[ $# -ne 1 ]]; then printErrorAndExit "${FUNCNAME[0]} invalid no of params. Number of Params is $#" "${errRt}"; fi
 	local locvar="$1"
 	locvar="${locvar#${locvar%%[![:space:]]*}}"
 	TTTT_trim="${locvar%${locvar##*[![:space:]]}}"
