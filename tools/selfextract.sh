@@ -25,7 +25,7 @@ if [[ -n $help ]]; then
 	echo
 	echo "Usage: $myCommand [ <install_dir>  | -h | --help ]"
 	echo
-	echo "Install Streams Toolkits Testframework Tool runTT"
+	echo "Install Bash Test Framework runbtf"
 	echo
 	echo "If no command line parameter is specified the installation"
 	echo "is done interactive"
@@ -53,7 +53,6 @@ fi
 
 #Get version information from own filename
 declare -r commandname="${0##*/}"
-declare version=''
 if [[ $commandname =~ testframeInstaller_v([0-9]+)\.([0-9]+)\.([0-9]+)\.sh ]]; then
 	major="${BASH_REMATCH[1]}"
 	minor="${BASH_REMATCH[2]}"
@@ -70,11 +69,11 @@ else
 fi
 
 if [[ -n $interactive ]]; then
-	while read -p "Install into directory $destination (yes/no/exit) [y/n/e]"; do
+	while read -pr "Install into directory $destination (yes/no/exit) [y/n/e]"; do
 		if [[ $REPLY == "y" || $REPLY == "Y" || $REPLY == "yes" ]]; then
 			break
 		elif [[ $REPLY == "n" || $REPLY == "N" || $REPLY == "no" ]]; then
-			read -p "Enter installation directory:"
+			read -pr "Enter installation directory:"
 			eval tempdir="$REPLY"
 			if [[ $tempdir != /* ]]; then
 				echo "Use a absolute path not $tempdir"
@@ -86,7 +85,7 @@ if [[ -n $interactive ]]; then
 		fi
 	done
 
-	while read -p "Install into directory $destination is this correct? (yes/exit) [y/e]"; do
+	while read -pr "Install into directory $destination is this correct? (yes/exit) [y/e]"; do
 		if [[ $REPLY == "y" || $REPLY == "Y" || $REPLY == "yes" ]]; then
 			break
 		elif [[ $REPLY == "e" || $REPLY == "E" || $REPLY == "exit" ]]; then
@@ -110,7 +109,7 @@ tempdir="${destination}/tmp/${versiondir}"
 #Determine the line with the archive marker
 declare -i archiveline=0
 declare -i line=0
-while read; do
+while read -r; do
 	line=$((line + 1 ))
 	if [[ $REPLY == __ARCHIVE_MARKER__ ]]; then
 		if [[ $archiveline -eq 0 ]]; then  # only the first marker counts
@@ -123,14 +122,14 @@ archiveline=$((archiveline + 1))
 #echo "archiveline=$archiveline"
 
 # Create destination folder
-mkdir -p ${tempdir}
+mkdir -p "${tempdir}"
 
-tail -n+${archiveline} "${0}" | tar xpJv -C ${tempdir}
+tail -n+${archiveline} "${0}" | tar xpJv -C "${tempdir}"
 
 #create target folder
-mkdir -p $installdir
-mkdir -p ${bindir}
-mkdir -p ${sampledir}
+mkdir -p "$installdir"
+mkdir -p "${bindir}"
+mkdir -p "${sampledir}"
 #remove old links
 rm -f "${destination}/bin/runbtf"
 rm -f "${destination}/bin/runbtf$major"
@@ -138,16 +137,16 @@ rm -f "${destination}/bin/runbtf$major.$minor"
 #move to target
 mv "$tempdir/README.md" "${destination}/${versiondir}"
 mv "$tempdir/RELEASE.INFO" "${destination}/${versiondir}"
-mv $tempdir/samples/* $sampledir
-mv $tempdir/bin/* $bindir
+mv $tempdir/samples/* "$sampledir"
+mv $tempdir/bin/* "$bindir"
 
 #remove temp folder
 rm -rf "${destination}/tmp"
 #make links
-mkdir -p ${destination}/bin
-ln -s ${bindir}/runbtf ${destination}/bin/runbtf
-ln -s ${bindir}/runbtf ${destination}/bin/runbtf$major
-ln -s ${bindir}/runbtf ${destination}/bin/runbtf$major.$minor
+mkdir -p "${destination}/bin"
+ln -s "${bindir}/runbtf" "${destination}/bin/runbtf"
+ln -s "${bindir}/runbtf" "${destination}/bin/runbtf$major"
+ln -s "${bindir}/runbtf" "${destination}/bin/runbtf$major.$minor"
 
 echo "***************************************************"
 echo "Installation complete. Target bin directory $bindir"

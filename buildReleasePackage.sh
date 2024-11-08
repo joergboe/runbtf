@@ -11,7 +11,7 @@ echo
 echo "Build release package version v$TTRO_version"
 echo
 
-while read -p "Is this correct: y/e "; do
+while read -pr "Is this correct: y/e "; do
 	if [[ $REPLY == "y" || $REPLY == "Y" ]]; then
 		break
 	elif [[ $REPLY == "e" || $REPLY == "E" ]]; then
@@ -23,7 +23,7 @@ commitstatus=$(git status --porcelain)
 if [[ $commitstatus ]]; then
 	echo "Repository has uncommited changes:"
 	echo "$commitstatus"
-	read -p "To produce the release anyway press y/Y";
+	read -pr "To produce the release anyway press y/Y";
 	if [[ $REPLY != "y" && $REPLY != "Y" ]]; then
 		echo "Abort"
 		exit 1
