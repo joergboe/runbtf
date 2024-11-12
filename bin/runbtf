@@ -13,19 +13,20 @@ shopt -s globstar nullglob
 
 #------------------------------------------------------
 # get the current directory and write it to currentDir
-declare -r currentDir=$(pwd)
+declare -r currentDir=${PWD}
 
 #------------------------------------------------------
 #get the scripts path and write it into scriptsDir
 #realpath is not available in rhel6
 if [[ -h $0 ]]; then
-	declare -r realCommand=$(readlink -e "$0")
+	realCommand=$(readlink -e "$0")
+	readonly realCommand
 	declare -r TTTI_commandname="${realCommand##*/}"
 	declare -r TTRO_scriptDir="${realCommand%/*}"
 else
 	tmp="${0%/*}"
 	cd "$tmp"
-	declare -r TTRO_scriptDir=$(pwd)
+	declare -r TTRO_scriptDir=${PWD}
 	cd "${currentDir}"
 	declare -r TTTI_commandname="${0##*/}"
 fi
@@ -130,11 +131,11 @@ declare -r -A valueOptions=(
 	['threadsPerJob']='-x --threads-per-job'
 	#['loadLimit']='--load-limit --loadlimit'
 )
-for x in ${!singleOptions[@]}; do
-	declare ${x}=""
+for x in "${!singleOptions[@]}"; do
+	declare "${x}"=""
 done
-for x in ${!valueOptions[@]}; do
-	declare ${x}=""
+for x in "${!valueOptions[@]}"; do
+	declare "${x}"=""
 done
 declare -a propertyFiles=() # The property files
 declare -a varNamesToSet=() #The list with variable names to set
@@ -144,7 +145,8 @@ declare -a TTTT_runCategoryPatternArray=() #the run time category pattern array
 
 #------------------------------------------------------
 #set number of cores
-declare -r noCpus=$(cat /proc/cpuinfo | grep processor | wc -l)
+noCpus=$(cat /proc/cpuinfo | grep processor | wc -l)
+readonly noCpus
 #getconf _NPROCESSORS_ONLN
 
 #---------------------------------------------------------
@@ -162,25 +164,25 @@ while [[ $# -ge 1 ]]; do
 	case $1 in
 	# serve the special cases first
 	-h|--help )
-		[[ -z $parametersection ]] || optionInParamSection $1
+		[[ -z $parametersection ]] || optionInParamSection "$1"
 		usage
 		exit 0;;
 	--man)
-		[[ -z $parametersection ]] || optionInParamSection $1
+		[[ -z $parametersection ]] || optionInParamSection "$1"
 		source "${TTRO_scriptDir}/man.sh"
 		manpage
 		exit 0;;
 	--bashhelp)
-		[[ -z $parametersection ]] || optionInParamSection $1
+		[[ -z $parametersection ]] || optionInParamSection "$1"
 		source "${TTRO_scriptDir}/manbash.sh"
 		manbashpage
 		exit 0;;
 	-V|--version)
-		[[ -z $parametersection ]] || optionInParamSection $1
+		[[ -z $parametersection ]] || optionInParamSection "$1"
 		echo "$TTRO_version"
 		exit 0;;
 	-p|--properties)
-		[[ $# -ge 2 && $2 != -* ]] || missOptionArg $1;
+		[[ $# -ge 2 && $2 != -* ]] || missOptionArg "$1";
 		tmp="${#propertyFiles[@]}"
 		propertyFiles[$tmp]="$2"
 		shift;;
@@ -189,10 +191,10 @@ while [[ $# -ge 1 ]]; do
 		TTTT_runCategoryPatternArray[$tmp]="$2"
 		shift;;
 	-D)
-		[[ $# -ge 2 && $2 != -* ]] || missOptionArg $1;
+		[[ $# -ge 2 && $2 != -* ]] || missOptionArg "$1";
 		vname=${2%%=*}
 		vvalue=${2#*=}
-		if [[ $2 != $vname && $2 != $vvalue ]]; then
+		if [[ $2 != "$vname" && $2 != "$vvalue" ]]; then
 			i=${#varNamesToSet[@]}
 			varNamesToSet[$i]="$vname"
 			varValuesToSet[$i]="$vvalue"
@@ -204,11 +206,11 @@ while [[ $# -ge 1 ]]; do
 		fi;;
 	# now serve all general options and value options
 	-* )
-		[[ -z $parametersection ]] || optionInParamSection $1
+		[[ -z $parametersection ]] || optionInParamSection "$1"
 		declare optionFound=""
-		for option in ${!singleOptions[@]}; do
+		for option in "${!singleOptions[@]}"; do
 			for ex in ${singleOptions[$option]}; do
-				if [[ $1 == ${ex} ]]; then
+				if [[ $1 == "${ex}" ]]; then
 					if [[ -n ${!option} ]]; then duplicateOption "${1}"; fi
 					eval "${option}=true"
 					optionFound='true'
@@ -217,11 +219,11 @@ while [[ $# -ge 1 ]]; do
 			done
 		done
 		if [[ -z ${optionFound} ]]; then
-			for option in ${!valueOptions[@]}; do
+			for option in "${!valueOptions[@]}"; do
 				for ex in ${valueOptions[$option]}; do
-					if [[ $1 == ${ex} ]]; then
+					if [[ $1 == "${ex}" ]]; then
 						if [[ -n ${!option} ]]; then duplicateOption "${1}"; fi
-						[[ $# -ge 2 && $2 != -* ]] || missOptionArg $1;
+						[[ $# -ge 2 && $2 != -* ]] || missOptionArg "$1";
 						if [[ $option == reference && -z $2 ]]; then
 							reference="util.sh"
 						else
@@ -324,7 +326,8 @@ if [[ ( ${#cases[*]} -gt 0 ) && ( ${#TTTT_runCategoryPatternArray[*]} -gt 0 ) ]]
 	printWarning "Categories are ignored since a case wildcard list was detected"
 	TTTT_runCategoryPatternArray=()
 fi
-declare -rx TTXX_runCategoryPatternArray=$(declare -p TTTT_runCategoryPatternArray)
+TTXX_runCategoryPatternArray=$(declare -p TTTT_runCategoryPatternArray)
+declare -rx TTXX_runCategoryPatternArray
 
 setVar 'TTPRN_debug' "$debug"
 setVar 'TTPRN_debugDisable' ''
@@ -351,7 +354,7 @@ fi
 if [[ -z ${workdir} ]]; then
 	workdir="${currentDir}/${DEFAULT_WORKDIR}"
 fi
-if ! mkdir -p ${workdir}; then
+if ! mkdir -p "${workdir}"; then
 	printErrorAndExit "Can not create workdir '${workdir}'" ${errRt}
 fi
 if cd "${workdir}"; then
@@ -402,11 +405,11 @@ readonly propertyFiles
 
 #----------------------------------
 #finally make option variables read only
-for x in ${!singleOptions[@]}; do
-	readonly ${x}
+for x in "${!singleOptions[@]}"; do
+	readonly "${x}"
 done
-for x in ${!valueOptions[@]}; do
-	readonly ${x}
+for x in "${!valueOptions[@]}"; do
+	readonly "${x}"
 done
 
 #-------------------------------------------
@@ -538,10 +541,10 @@ done
 
 #--------------------------------------------------
 #check whether cases from input list are not found
-for x in ${!cases[@]}; do
+for x in "${!cases[@]}"; do
 	patternMatchWasFound=''
 	for y in $usedCaseIndexList; do
-		if [[ $x == $y ]]; then
+		if [[ $x == "$y" ]]; then
 			patternMatchWasFound='true'
 			break
 		fi
@@ -565,7 +568,7 @@ printSuitesCases 0 0 'true' ''
 
 echo "********************************************************"
 if [[ -z $TTRO_noPrompt && -z $TTRO_reference ]]; then
-	while read -p "Continue or exit? y/e "; do
+	while read -r -p "Continue or exit? y/e "; do
 		if [[ $REPLY == y* || $REPLY == Y* || $REPLY == c* || $REPLY == C* ]]; then
 			break
 		elif [[ $REPLY == e* || $REPLY == E* || $REPLY == n* || $REPLY == N* ]]; then
@@ -576,24 +579,24 @@ fi
 
 #######################################################################################
 #echo "*******************************************************************************************************"
-declare -r collectionStartTime=$(date -u +%s)
+collectionStartTime=$(date -u +%s); declare -r collectionStartTime
 declare -xr TTRO_collection="${TTRO_inputDir##*/}"
 printInfo "**** START Collection collection='$TTRO_collection' START ********************"
 printInfo "Use $TTRO_noParallelCases parallel jobs and $TTRO_treads threads per job on $noCpus cores"
 #-----------------------
 #export execution lists
-export TTXX_suitesPath=$(declare -p TTTI_suitesPath)
-export TTXX_suitesName=$(declare -p TTTI_suitesName)
-export TTXX_executeSuite=$(declare -p TTTI_executeSuite)
-export TTXX_childSuites=$(declare -p TTTI_childSuites)
-export TTXX_casesPath=$(declare -p TTTI_casesPath)
-export TTXX_casesName=$(declare -p TTTI_casesName)
-export TTXX_executeCase=$(declare -p TTTI_executeCase)
-export TTXX_childCases=$(declare -p TTTI_childCases)
+TTXX_suitesPath=$(declare -p TTTI_suitesPath); export TTXX_suitesPath
+TTXX_suitesName=$(declare -p TTTI_suitesName); export TTXX_suitesName
+TTXX_executeSuite=$(declare -p TTTI_executeSuite); export TTXX_executeSuite
+TTXX_childSuites=$(declare -p TTTI_childSuites); export TTXX_childSuites
+TTXX_casesPath=$(declare -p TTTI_casesPath); export TTXX_casesPath
+TTXX_casesName=$(declare -p TTTI_casesName); export TTXX_casesName
+TTXX_executeCase=$(declare -p TTTI_executeCase); export TTXX_executeCase
+TTXX_childCases=$(declare -p TTTI_childCases); export TTXX_childCases
 
 #----------------
 #make output dir
-declare -r TTTT_datestring=$(date +%Y%m%d-%H%M%S)
+TTTT_datestring=$(date +%Y%m%d-%H%M%S); declare -r
 if [[ $flat == 'true' ]]; then
 	TTRO_workDir="${workdir}"
 else
@@ -606,7 +609,7 @@ if [[ -e $TTRO_workDir ]]; then
 	if [[ -n $TTRO_noPrompt ]]; then
 		rm -rf "$TTRO_workDir"
 	else
-		while read -p "WARNING: Output directory already exists $TTRO_workDir: Remove it or not or exit? y/n/e "; do
+		while read -r -p "WARNING: Output directory already exists $TTRO_workDir: Remove it or not or exit? y/n/e "; do
 			if [[ $REPLY == y* || $REPLY == Y* ]]; then
 				rm -rf "$TTRO_workDir"
 				break
@@ -673,7 +676,7 @@ for x in CASE_EXECUTE CASE_SUCCESS CASE_SKIP CASE_FAILURE CASE_ERROR SUITE_EXECU
 	if isVerbose || [[ $x == *_SUCCESS || $x == *_SKIP || $x == *_FAILURE || $x == *_ERROR ]]; then echo; echo "**** $x List : ************************"; fi
 	if [[ -e ${tmp} ]]; then
 		{
-			while read; do
+			while read -r; do
 				if isVerbose || [[ $x == *_SUCCESS || $x == *_SKIP || $x == *_FAILURE || $x == *_ERROR ]]; then echo "$REPLY "; fi
 				if [[ $REPLY != \#* ]]; then
 					eval "${x}Count=\$((\${x}Count+1))"
@@ -693,14 +696,14 @@ fi
 indexfilename="${TTRO_workDir}/index.html"
 cats=''
 if [[ ${#TTTT_runCategoryPatternArray[*]} -gt 0 ]]; then
-	cats="${TTTT_runCategoryPatternArray[@]}"
+	cats="${TTTT_runCategoryPatternArray[*]}"
 fi
 echo
 {
 	printf "*******************************************************************************************************\n"
-	printf "***** collection : %s\n" $TTRO_collection
-	printf "***** suites executed=%i errors=%i skipped=%i\n" $SUITE_EXECUTECount $SUITE_ERRORCount $SUITE_SKIPCount
-	printf "***** cases  executed=%i failures=%i errors=%i skipped=%i\n" $CASE_EXECUTECount $CASE_FAILURECount $CASE_ERRORCount $CASE_SKIPCount
+	printf "***** collection : %s\n" "$TTRO_collection"
+	printf "***** suites executed=%i errors=%i skipped=%i\n" "$SUITE_EXECUTECount" "$SUITE_ERRORCount" "$SUITE_SKIPCount"
+	printf "***** cases  executed=%i failures=%i errors=%i skipped=%i\n" "$CASE_EXECUTECount" "$CASE_FAILURECount" "$CASE_ERRORCount" "$CASE_SKIPCount"
 	printf "***** categories of this run : %s\n" "$cats"
 	printf "***** used workdir : %s\n" "$TTRO_workDir"
 	printf "***** Index in %s\n" "$indexfilename"

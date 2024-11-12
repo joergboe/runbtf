@@ -19,7 +19,7 @@ t2=$((t1 + myDuration))
 tx=0
 while ((tx < t2)); do
     x=100000;
-    while let x=x-1; do
+    while ((x=x-1)); do
         #echo $x
         #let x=x-1;
         :

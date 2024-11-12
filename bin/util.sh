@@ -105,7 +105,7 @@ function printErrorAndExit {
 		i=$((i+1))
 	done
 	echo -e "************************************************\033[0m"
-	exit $errcode
+	exit "$errcode"
 }
 readonly -f printErrorAndExit
 
@@ -117,7 +117,7 @@ TTRO_help_printError="
 #		success (0)
 #		error	in exceptional cases"
 function printError {
-	local dd=$(date "+%T %N")
+	local dd; dd=$(date "+%T %N")
 	echo -e "\033[31m$dd ERROR: $1\033[0m" >&2
 }
 readonly -f printError
@@ -130,7 +130,7 @@ TTRO_help_printWarning="
 #		success (0)
 #		error	in exceptional cases"
 function printWarning {
-	local dd=$(date "+%T %N")
+	local dd; dd=$(date "+%T %N")
 	echo -e "\033[33m$dd WARNING: $1\033[0m" >&2
 }
 readonly -f printWarning
@@ -145,7 +145,7 @@ TTRO_help_printDebug="
 function printDebug {
 	local -i i
 	local stackInfo=''
-	local dd=$(date "+%T %N")
+	local dd; dd=$(date "+%T %N")
 	for ((i=${#FUNCNAME[@]}-1; i>0; i--)); do
 		stackInfo="$stackInfo ${FUNCNAME[$i]}"
 	done
@@ -163,7 +163,7 @@ TTRO_help_printDebugn="
 function printDebugn {
 	local -i i
 	local stackInfo=''
-	local dd=$(date "+%T %N")
+	local dd; dd=$(date "+%T %N")
 	for ((i=${#FUNCNAME[@]}-1; i>0; i--)); do
 		stackInfo="$stackInfo ${FUNCNAME[$i]}"
 	done
@@ -179,7 +179,7 @@ TTRO_help_printInfo="
 #		success (0)
 #		error	in exceptional cases"
 function printInfo {
-	local dd=$(date "+%T %N")
+	local dd; dd=$(date "+%T %N")
 	echo -e "$dd INFO: ${1}"
 }
 readonly -f printInfo
@@ -192,7 +192,7 @@ TTRO_help_printInfon="
 #		success (0)
 #		error	in exceptional cases"
 function printInfon {
-	local dd=$(date "+%T %N")
+	local dd; dd=$(date "+%T %N")
 	echo -en "$dd INFO: ${1}"
 }
 readonly -f printInfon
@@ -205,7 +205,7 @@ TTRO_help_printVerbose="
 #		success (0)
 #		error	in exceptional cases"
 function printVerbose {
-	local dd=$(date "+%T %N")
+	local dd; dd=$(date "+%T %N")
 	echo -e "$dd VERBOSE: ${1}"
 }
 readonly -f printVerbose
@@ -218,7 +218,7 @@ TTRO_help_printVerbosen="
 #		success (0)
 #		error	in exceptional cases"
 function printVerbosen {
-	local dd=$(date "+%T %N")
+	local dd; dd=$(date "+%T %N")
 	echo -en "$dd VERBOSE: ${1}"
 }
 readonly -f printVerbosen
@@ -692,20 +692,20 @@ function copyAndTransform {
 	local -i j=0
 	local -i i
 	for ((i=4; i<max; i++)); do
-		transformPattern[$j]="${!i}"
+		transformPattern[j]="${!i}"
 		j=$((j+1))
 	done
 	if isDebug; then
-		local display=$(declare -p transformPattern);
+		local display; display=$(declare -p transformPattern);
 		printDebug "$display"
 	fi
 	local dest=""
-	for x in $1/**; do #first create dir structure
+	for x in "$1"/**; do #first create dir structure
 		isDebug && printDebug "${FUNCNAME[0]} item to process step1: $x"
 		if [[ -d $x ]]; then
 			dest="${x#$1}"
 			dest="$2/$dest"
-			echo $dest
+			echo "$dest"
 			if isVerbose; then
 				mkdir -pv "$dest"
 			else
@@ -715,7 +715,7 @@ function copyAndTransform {
 	done
 	local match=0
 	local x
-	for x in $1/**; do
+	for x in "$1"/**; do
 		if [[ ! -d $x ]]; then
 			isDebug && printDebug "${FUNCNAME[0]} item to process step2: $x"
 			for ((i=0; i<${#transformPattern[@]}; i++)); do
@@ -807,16 +807,16 @@ function copyAndMorph {
 	local -i j=0
 	local -i i
 	for ((i=4; i<max; i++)); do
-		transformPattern[$j]="${!i}"
+		transformPattern[j]="${!i}"
 		j=$((j+1))
 	done
 	if isDebug; then
-		local display=$(declare -p transformPattern);
+		local display; display=$(declare -p transformPattern);
 		printDebug "$display"
 	fi
 	local dest=""
 	local x
-	for x in $1/**; do #first create dir structure
+	for x in "$1"/**; do #first create dir structure
 		if [[ -d $x ]]; then
 			isDebug && printDebug "${FUNCNAME[0]} item to process step1 create dir structure: $x"
 			dest="${x#$1}"
@@ -830,7 +830,7 @@ function copyAndMorph {
 		fi
 	done
 	local match=""
-	for x in $1/**; do
+	for x in "$1"/**; do
 		if [[ ! -d $x ]]; then
 			isDebug && printDebug "${FUNCNAME[0]} item to process step2 copy/transform: $x"
 			match=''
@@ -974,7 +974,7 @@ function linewisePatternMatch {
 	local -i noPattern=0
 	TTTT_patternList=()
 	for ((i=3; i<=max; i++)); do
-		TTTT_patternList[$noPattern]="${!i}"
+		TTTT_patternList[noPattern]="${!i}"
 		noPattern=$((noPattern+1))
 	done
 	if linewisePatternMatchArray "$1" "$2"; then
@@ -1068,7 +1068,7 @@ function linewisePatternMatchArray {
 		patternMatched[i]=''
 	done
 	if isDebug; then
-		local display=$(declare -p TTTT_patternList);
+		local display; display=$(declare -p TTTT_patternList);
 		printDebug "$display"
 	fi
 	if [[ -f $1 ]]; then
@@ -1115,7 +1115,7 @@ function linewisePatternMatchArray {
 				for i in ${noMatchIn}; do
 					echo "${FUNCNAME[0]} FAILURE: no match for pattern ${TTTT_patternList[$i]}" >&2
 				done
-				return $errTestFail
+				return "$errTestFail"
 			fi
 		else
 			if [[ $matches -gt 0 ]]; then
@@ -1131,7 +1131,7 @@ function linewisePatternMatchArray {
 		fi
 	else
 		echo "${FUNCNAME[0]}: can not open file $1" >&2
-		return $errTestFail
+		return "$errTestFail"
 	fi
 }
 readonly -f linewisePatternMatchArray
@@ -1284,7 +1284,7 @@ function echoExecuteAndIntercept2 {
 		printErrorAndExit "${FUNCNAME[0]} called with no or empty command" "${errRt}"
 	fi
 	if [[ $1 != success && $1 != error && $1 != X ]]; then
-		if ! isNumber "$1" ]]; then
+		if ! isNumber "$1"; then
 			printErrorAndExit "${FUNCNAME[0]} called with wrong parameters: $*" "${errRt}"
 		fi
 	fi
@@ -1649,7 +1649,7 @@ function promptYesNo {
 		pr="$1"
 	fi
 	local inputWasY=''
-	while read -p "$pr"; do
+	while read -r -p "$pr"; do
 		if [[ $REPLY == y* || $REPLY == Y* || $REPLY == c* || $REPLY == C* ]]; then
 			inputWasY='true'
 			break
@@ -1731,7 +1731,7 @@ TTRO_help_getElapsedTime='
 #		TTTT_elapsedTime'
 function getElapsedTime {
 	if [[ $# -ne 1 ]]; then printErrorAndExit "${FUNCNAME[0]} : wrong no of arguments $#" "${errRt}"; fi
-	local psres="$errSigint"
+	local psres; psres="$errSigint"
 	local now=''
 	while [[ $psres -eq $errSigint ]]; do
 		psres=0
@@ -1811,7 +1811,7 @@ TTRO_help_checkLineCount='
 checkLineCount() {
 	if [[ $# -ne 2 ]]; then printErrorAndExit "${FUNCNAME[0]} : wrong number of params $#" "${errRt}"; fi
 	if [[ -f $1 ]]; then
-		local x=$(wc -l "$1" | cut -f 1 -d ' ')
+		local x; x=$(wc -l "$1" | cut -f 1 -d ' ')
 		if [[ $x -eq $2 ]]; then
 			printInfo "${FUNCNAME[0]} : Expected line count in file $1 is correct $2"
 		else

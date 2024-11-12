@@ -80,22 +80,22 @@ function usage {
 function missOptionArg {
 	printError "Missing Option argument $1 \n\n"
 	usage;
-	exit ${errInvocation}
+	exit "${errInvocation}"
 }
 function duplicateOption {
 	printError "Duplicate option $1 \n\n"
 	usage
-	exit ${errInvocation}
+	exit "${errInvocation}"
 }
 function fewArgs {
 	printError "To few arguments!!!\n\n"
 	usage;
-	exit ${errInvocation}
+	exit "${errInvocation}"
 }
 function optionInParamSection {
 	printError "Option argument $1 must be placed before cases section\n\n"
 	usage;
-	exit ${errInvocation}
+	exit "${errInvocation}"
 }
 
 # Scan scan directory structure and search for suites
@@ -116,7 +116,7 @@ function optionInParamSection {
 # childSuitesIndex: the index of the next child suite in the current suite
 #
 function scan {
-	isDebug && printDebug "******* $FUNCNAME dir to scan='$1' index of the parent suite $2 path of the parent suite=${TTTI_suitesPath[$2]}"
+	isDebug && printDebug "******* ${FUNCNAME[0]} dir to scan='$1' index of the parent suite $2 path of the parent suite=${TTTI_suitesPath[$2]}"
 	local parentSuite="$2"
 	local mypath
 	local dirlist=()
@@ -125,7 +125,7 @@ function scan {
 	local mySuiteIndex="$2"
 	local parentPath="${TTTI_suitesPath[$parentSuite]}"
 	if [[ $1 == *[[:space:]]* ]]; then
-		printErrorAndExit "Pathes must not have spaces! Wrong component is $1" ${errRt}
+		printErrorAndExit "Pathes must not have spaces! Wrong component is $1" "${errRt}"
 	fi
 	for mypath in $1/*; do
 		isDebug && printDebug "'$mypath'"
@@ -135,10 +135,10 @@ function scan {
 		if [[ -d $mypath ]]; then
 			dirlist+=("$mypath")
 		else
-			if [[ $filename == $TEST_SUITE_FILE ]]; then
-				if [[ $mybase == $TTRO_inputDir ]]; then
+			if [[ $filename == "$TEST_SUITE_FILE" ]]; then
+				if [[ $mybase == "$TTRO_inputDir" ]]; then
 					#printWarning "$TEST_SUITE_FILE found in top level directory: Probably you start not from the root of your test collection $1"
-					printErrorAndExit "$TEST_SUITE_FILE is not allowed in top level directory $1" $errInvocation
+					printErrorAndExit "$TEST_SUITE_FILE is not allowed in top level directory $1" "$errInvocation"
 				else
 					isSuite='true'
 					TTTI_suitesPath[$suitesIndex]="$mybase"
@@ -154,9 +154,9 @@ function scan {
 					isDebug && printDebug "Suite found state of TTTI_childSuites:"
 					#declare -p TTTI_childSuites
 				fi
-			elif [[ $filename == $TEST_CASE_FILE ]]; then
-				if [[ $mybase == $TTRO_inputDir ]]; then
-					printErrorAndExit "$TEST_CASE_FILE is not allowed in top level directory $1" $errInvocation
+			elif [[ $filename == "$TEST_CASE_FILE" ]]; then
+				if [[ $mybase == "$TTRO_inputDir" ]]; then
+					printErrorAndExit "$TEST_CASE_FILE is not allowed in top level directory $1" "$errInvocation"
 				fi
 				if [[ $isSuite ]]; then
 					printError "ERROR ignore Suite and Case in one directory in $mybase"
@@ -182,7 +182,7 @@ function scan {
 	for ((i=0;i<${#dirlist[@]};i++)); do
 		scan "${dirlist[$i]}" "$mySuiteIndex"
 	done
-	isDebug && printDebug "Leave $FUNCNAME $1 childSuitesIndex=$childSuitesIndex"
+	isDebug && printDebug "Leave ${FUNCNAME[0]} $1 childSuitesIndex=$childSuitesIndex"
 	return 0
 }
 
@@ -192,7 +192,7 @@ function scan {
 # $3 if true: print only the cases/suites to execute
 # $4 if true print debug
 function printSuitesCases {
-	isDebug && printDebug "******* $FUNCNAME $1 $2 $3 $4"
+	isDebug && printDebug "******* ${FUNCNAME[0]} $1 $2 $3 $4"
 	local ident="$2"
 	local spacer=''
 	local i
@@ -232,7 +232,7 @@ function printSuitesCases {
 # $3 path of suites
 # $4 list of parent suite indexes
 function checkCaseMatch {
-	isDebug && printDebug "******* $FUNCNAME $*"
+	isDebug && printDebug "******* ${FUNCNAME[0]} $*"
 	local i j
 	local y x
 	local allSuiteIndexes="$4 $1"
@@ -279,10 +279,10 @@ function printParams {
 		printDebug "** Commandline parameters **"
 		printDebug "TTRO_scriptDir=${TTRO_scriptDir}"
 		local x
-		for x in ${!singleOptions[@]}; do
+		for x in "${!singleOptions[@]}"; do
 			printDebug "${x}=${!x}"
 		done
-		for x in ${!valueOptions[@]}; do
+		for x in "${!valueOptions[@]}"; do
 			printDebug "${x}=${!x}"
 		done
 		local -i i

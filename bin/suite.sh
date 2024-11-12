@@ -24,7 +24,7 @@ declare -i TTTI_interruptReceived=0
 declare -r TTTI_commandname="${0##*/}"
 declare -r TTTI_sigspec='TERM'
 #start time
-declare -r TTTT_suiteStartTime=$(date -u +%s)
+TTTT_suiteStartTime=$(date -u +%s); readonly TTTT_suiteStartTime
 #state
 TTTT_executionState='initializing'
 TTTT_suiteFinalized=''
@@ -53,7 +53,7 @@ trap handleSigint SIGINT
 # Function errorTrapFunc
 #	global error exit function - prints the caller stack
 errorTrapFunc() {
-	echo -e "\033[31mERROR: $FUNCNAME ***************"
+	echo -e "\033[31mERROR: ${FUNCNAME[0]} ***************"
 	local -i i=0;
 	while caller $i; do
 		i=$((i+1))
@@ -128,7 +128,7 @@ declare -i TTTI_executedTestFinSteps=0
 suiteFinalization() {
 	#unset the errtrace too to avoid unnecessary error traps
 	set +o errexit; set +o nounset; set +o errtrace
-	isDebug && printDebug "$FUNCNAME"
+	isDebug && printDebug "${FUNCNAME[0]}"
 	if [[ $TTTT_executionState == 'initializing' ]]; then
 		return 0
 	fi
@@ -144,7 +144,7 @@ suiteFinalization() {
 
 suiteExitFunction() {
 	set +o errexit; set +o nounset; set +o errtrace
-	printInfo "$FUNCNAME"
+	printInfo "${FUNCNAME[0]}"
 	if ! TTTF_isSkip; then
 		suiteFinalization
 	fi
@@ -291,33 +291,33 @@ for ((TTTI_i=0; TTTI_i<TTTI_noCases; TTTI_i++)) do
 	#echo "variantCount=$variantCount variantList=$variantList"
 	if [[ -z $variantCount ]]; then
 		if [[ -z $variantList ]]; then
-			TTTI_caseVariantPathes[$TTTI_noCaseVariants]="$TTTI_casePath"
-			TTTI_caseVariantIds[$TTTI_noCaseVariants]=""
-			TTTI_caseVariantWorkdirs[$TTTI_noCaseVariants]="${TTRO_workDirSuite}/${TTTI_caseName}"
-			TTTI_casePreambErrors[$TTTI_noCaseVariants]="$TTTI_preamblError"
+			TTTI_caseVariantPathes[TTTI_noCaseVariants]="$TTTI_casePath"
+			TTTI_caseVariantIds[TTTI_noCaseVariants]=""
+			TTTI_caseVariantWorkdirs[TTTI_noCaseVariants]="${TTRO_workDirSuite}/${TTTI_caseName}"
+			TTTI_casePreambErrors[TTTI_noCaseVariants]="$TTTI_preamblError"
 			setTimeoutInArray
-			TTTI_caseExclusiveExecution[$TTTI_noCaseVariants]="$exclusive"
+			TTTI_caseExclusiveExecution[TTTI_noCaseVariants]="$exclusive"
 			TTTI_noCaseVariants=$((TTTI_noCaseVariants+1))
 		else
 			for TTTI_x in $variantList; do
-				TTTI_caseVariantPathes[$TTTI_noCaseVariants]="$TTTI_casePath"
-				TTTI_caseVariantIds[$TTTI_noCaseVariants]="${TTTI_x}"
-				TTTI_caseVariantWorkdirs[$TTTI_noCaseVariants]="${TTRO_workDirSuite}/${TTTI_caseName}/${TTTI_x}"
-				TTTI_casePreambErrors[$TTTI_noCaseVariants]="$TTTI_preamblError"
+				TTTI_caseVariantPathes[TTTI_noCaseVariants]="$TTTI_casePath"
+				TTTI_caseVariantIds[TTTI_noCaseVariants]="${TTTI_x}"
+				TTTI_caseVariantWorkdirs[TTTI_noCaseVariants]="${TTRO_workDirSuite}/${TTTI_caseName}/${TTTI_x}"
+				TTTI_casePreambErrors[TTTI_noCaseVariants]="$TTTI_preamblError"
 				setTimeoutInArray
-				TTTI_caseExclusiveExecution[$TTTI_noCaseVariants]="$exclusive"
+				TTTI_caseExclusiveExecution[TTTI_noCaseVariants]="$exclusive"
 				TTTI_noCaseVariants=$((TTTI_noCaseVariants+1))
 			done
 		fi
 	else
 		if [[ -z $variantList ]]; then
 			for ((TTTI_j=0; TTTI_j<variantCount; TTTI_j++)); do
-				TTTI_caseVariantPathes[$TTTI_noCaseVariants]="$TTTI_casePath"
-				TTTI_caseVariantIds[$TTTI_noCaseVariants]="${TTTI_j}"
-				TTTI_caseVariantWorkdirs[$TTTI_noCaseVariants]="${TTRO_workDirSuite}/${TTTI_caseName}/${TTTI_j}"
-				TTTI_casePreambErrors[$TTTI_noCaseVariants]="$TTTI_preamblError"
+				TTTI_caseVariantPathes[TTTI_noCaseVariants]="$TTTI_casePath"
+				TTTI_caseVariantIds[TTTI_noCaseVariants]="${TTTI_j}"
+				TTTI_caseVariantWorkdirs[TTTI_noCaseVariants]="${TTRO_workDirSuite}/${TTTI_caseName}/${TTTI_j}"
+				TTTI_casePreambErrors[TTTI_noCaseVariants]="$TTTI_preamblError"
 				setTimeoutInArray
-				TTTI_caseExclusiveExecution[$TTTI_noCaseVariants]="$exclusive"
+				TTTI_caseExclusiveExecution[TTTI_noCaseVariants]="$exclusive"
 				TTTI_noCaseVariants=$((TTTI_noCaseVariants+1))
 			done
 			unset TTTI_j
@@ -546,7 +546,7 @@ handleJobEnd() {
 					caseElapsedTime=$(<"${TTTI_tcaseWorkDir[$i]}/ELAPSED")
 				else
 					if [[ -e "${TTTI_tcaseWorkDir[$i]}/STARTTIME" ]]; then
-						local caseStartTime=$(<"${TTTI_tcaseWorkDir[$i]}/STARTTIME")
+						local caseStartTime; caseStartTime=$(<"${TTTI_tcaseWorkDir[$i]}/STARTTIME")
 						getElapsedTime "$caseStartTime"
 						caseElapsedTime="$TTTT_elapsedTime"
 					fi
@@ -559,7 +559,7 @@ handleJobEnd() {
 				#collect variant result
 				local jobsResultFile="${TTTI_tcaseWorkDir[$i]}/RESULT"
 				if [[ -e ${jobsResultFile} ]]; then
-					local jobsResult=$(<"${jobsResultFile}")
+					local jobsResult; jobsResult=$(<"${jobsResultFile}")
 					case "$jobsResult" in
 						SUCCESS )
 							echo "$tmpCaseAndVariant" >> "${TTRO_workDirSuite}/CASE_SUCCESS"

@@ -29,7 +29,7 @@ readonly -f TTTF_isSkip
 # $8 html indexfilename
 # expect TTTI_suiteVariants TTTI_suiteErrors TTTI_suiteSkip
 function TTTF_exeSuite {
-	isDebug && printDebug "******* $FUNCNAME $* number args $#"
+	isDebug && printDebug "******* ${FUNCNAME[0]} $* number args $#"
 	local suite="${TTTI_suitesName[$1]}"
 	local suitePath="${TTTI_suitesPath[$1]}"
 	local nestingLevel=$(($3+1))
@@ -53,7 +53,7 @@ function TTTF_exeSuite {
 		suiteNestingString+=":$2"
 	fi
 	if [[ -z ${TTTI_executeSuite[$1]} ]]; then
-		isDebug && printDebug "$FUNCNAME: no execution of suite $suitePath: variant='$2'"
+		isDebug && printDebug "${FUNCNAME[0]}: no execution of suite $suitePath: variant='$2'"
 		return 0
 	fi
 	printInfo "**** START Suite suite='${suite}' variant='$2' in ${suitePath} START ********************"
@@ -104,7 +104,7 @@ function TTTF_exeSuite {
 				TTTI_suiteErrors=$(( TTTI_suiteErrors + 1))
 				builtin echo "$suiteNestingString" >> "${6}/SUITE_ERROR"
 			else
-				printErrorAndExit "Execution of root suite failed" $errRt
+				printErrorAndExit "Execution of root suite failed" "$errRt"
 			fi
 		fi
 	fi
@@ -117,7 +117,7 @@ function TTTF_exeSuite {
 			local outputFileName="${6}/${x}"
 			eval "local ${x}_Count=0"
 			if [[ -e ${inputFileName} ]]; then
-				{ while read; do
+				{ while read -r; do
 					if [[ $REPLY != \#* ]]; then
 						echo "$REPLY" >> "$outputFileName"
 						eval "${x}_Count=$((${x}_Count+1))"
@@ -160,21 +160,21 @@ function TTTF_fixPropsVars {
 		done
 	fi
 	for TTTT_var in "${!TT_@}"; do
-		isDebug && printDebug "${FUNCNAME} : TT_   $TTTT_var=${!TTTT_var}"
+		isDebug && printDebug "${FUNCNAME[0]} : TT_   $TTTT_var=${!TTTT_var}"
 		export "${TTTT_var}"
 	done
 	for TTTT_var in "${!TTRO_@}"; do
-		isDebug && printDebug "${FUNCNAME} : TTRO_ $TTTT_var=${!TTTT_var}"
+		isDebug && printDebug "${FUNCNAME[0]} : TTRO_ $TTTT_var=${!TTTT_var}"
 		readonly "${TTTT_var}"
 		export "${TTTT_var}"
 	done
 	for TTTT_var in "${!TTPR_@}"; do
-		isDebug && printDebug "${FUNCNAME} : TTPR_  $TTTT_var=${!TTTT_var}"
+		isDebug && printDebug "${FUNCNAME[0]} : TTPR_  $TTTT_var=${!TTTT_var}"
 		readonly "${TTTT_var}"
 		export "${TTTT_var}"
 	done
 	for TTTT_var in "${!TTPRN_@}"; do
-		isDebug && printDebug "${FUNCNAME} : TTPRN_ $TTTT_var=${!TTTT_var}"
+		isDebug && printDebug "${FUNCNAME[0]} : TTPRN_ $TTTT_var=${!TTTT_var}"
 		if [[ -n "${!TTTT_var}" ]]; then
 			readonly "${TTTT_var}"
 		fi
@@ -197,9 +197,9 @@ readonly -f TTTF_fixPropsVars
 # return 1 if an invalid preambl was read;
 # results are returned in global variables variantCount, variantList, timeout, exclusive
 function TTTF_evalPreambl {
-	isDebug && printDebug "$FUNCNAME $1"
+	isDebug && printDebug "${FUNCNAME[0]} $1"
 	if [[ ! -r $1 ]]; then
-		printErrorAndExit "${FUNCNAME} : Can not open file=$1 for read" ${errRt}
+		printErrorAndExit "${FUNCNAME[0]} : Can not open file=$1 for read" "${errRt}"
 	fi
 	variantCount=""; variantList=""; timeout=''; exclusive=''
 	declare -i lineno=1
@@ -226,52 +226,52 @@ function TTTF_evalPreambl {
 					else
 						if TTTF_SplitPreamblAssign "$preamblLine"; then
 							if [[ -n $varname ]] ; then
-								isDebug && printDebug "$FUNCNAME prepare for variant encoding varname=$varname value=$value"
+								isDebug && printDebug "${FUNCNAME[0]} prepare for variant encoding varname=$varname value=$value"
 								case $varname in
 									variantCount )
 										if ! eval "variantCount=${value}"; then
-											printError "${FUNCNAME} : Invalid value in file=$1 line=$lineno '$preamblLine'"
+											printError "${FUNCNAME[0]} : Invalid value in file=$1 line=$lineno '$preamblLine'"
 											return 1
 										fi
 										if ! isPureNumber "$variantCount"; then
-											printError "${FUNCNAME} : variantCount is no digit in file=$1 line=$lineno '$preamblLine'"
+											printError "${FUNCNAME[0]} : variantCount is no digit in file=$1 line=$lineno '$preamblLine'"
 											return 1
 										fi
 										isVerbose && printVerbose "variantCount='${variantCount}'"
 									;;
 									variantList )
 										if ! eval "variantList=${value}"; then
-											printError "${FUNCNAME} : Invalid value in file=$1 line=$lineno '$preamblLine'"
+											printError "${FUNCNAME[0]} : Invalid value in file=$1 line=$lineno '$preamblLine'"
 											return 1
 										fi
 										isVerbose && printVerbose "variantList='${variantList}'"
 									;;
 									timeout )
 										if ! eval "timeout=${value}"; then
-											printError "${FUNCNAME} : Invalid value in file=$1 line=$lineno '$preamblLine'"
+											printError "${FUNCNAME[0]} : Invalid value in file=$1 line=$lineno '$preamblLine'"
 											return 1
 										fi
 										if ! isPureNumber "$timeout"; then
-											printError "${FUNCNAME} : timeout is no digit in file=$1 line=$lineno '$preamblLine'"
+											printError "${FUNCNAME[0]} : timeout is no digit in file=$1 line=$lineno '$preamblLine'"
 											return 1
 										fi
 										isVerbose && printVerbose "timeout='${timeout}'"
 									;;
 									exclusive )
 										if ! eval "exclusive=${value}"; then
-											printError "${FUNCNAME} : Invalid value in file=$1 line=$lineno '$preamblLine'"
+											printError "${FUNCNAME[0]} : Invalid value in file=$1 line=$lineno '$preamblLine'"
 											return 1
 										fi
 										isVerbose && printVerbose "exclusive='${exclusive}'"
 									;;
 									* )
 										#other property or variable
-										printError "${FUNCNAME} : Invalid preambl varname='$varname' in file $1 line=$lineno '$preamblLine'"
+										printError "${FUNCNAME[0]} : Invalid preambl varname='$varname' in file $1 line=$lineno '$preamblLine'"
 										return 1
 									;;
 								esac
 							else
-								printError "${FUNCNAME} : Invalid preampl line case or suitefile file=$1 line=$lineno '$preamblLine'"
+								printError "${FUNCNAME[0]} : Invalid preampl line case or suitefile file=$1 line=$lineno '$preamblLine'"
 								return 1
 							fi
 						else
@@ -308,12 +308,12 @@ readonly -f TTTF_evalPreambl
 #					the varname is empty if there is no valid assignement in the preambl line
 #		error(1)   if there was no prambl line'
 function TTTF_SplitPreamblAssign {
-	[[ $# -eq 1 ]] || printErrorAndExit "Wrong number of arguments $# in $FUNCNAME" $errRt
-	isDebug && printDebug "$FUNCNAME \$1='$1'"
+	[[ $# -eq 1 ]] || printErrorAndExit "Wrong number of arguments $# in ${FUNCNAME[0]}" "$errRt"
+	isDebug && printDebug "${FUNCNAME[0]} \$1='$1'"
 	if [[ $1 =~ ^([a-zA-Z0-9_]+)=(.*) ]]; then
 		varname="${BASH_REMATCH[1]}"
 		value="${BASH_REMATCH[2]}"
-		isDebug && printDebug "$FUNCNAME varname='$varname' value='$value'"
+		isDebug && printDebug "${FUNCNAME[0]} varname='$varname' value='$value'"
 		return 0
 	else
 		varname=""
@@ -367,10 +367,10 @@ readonly -f TTTF_listExportedFunctions
 #        false otherwise
 function TTTF_checkCats {
 	if isNotExisting 'TTTT_categoryArray'; then
-		printErrorAndExit "variable TTTT_categoryArray must exist" $errRt
+		printErrorAndExit "variable TTTT_categoryArray must exist" "$errRt"
 	fi
 	if ! isArray 'TTTT_categoryArray'; then
-		printErrorAndExit "variable TTTT_categoryArray must be an indexed array" $errRt
+		printErrorAndExit "variable TTTT_categoryArray must be an indexed array" "$errRt"
 	fi
 	if isDebug; then
 		local dispstring=$(declare -p 'TTTT_categoryArray')
@@ -397,7 +397,7 @@ function TTTF_checkCats {
 		done
 		i=$((i+1))
 	done
-	printInfo "No run category pattern match found: $FUNCNAME returns false"
+	printInfo "No run category pattern match found: ${FUNCNAME[0]} returns false"
 	return 1
 }
 readonly -f TTTF_checkCats
@@ -408,7 +408,7 @@ readonly -f TTTF_checkCats
 TTTF_killchilds() {
 	local pid=$1
 	local sig=${2:--TERM}
-	isDebug && printDebug "$FUNCNAME pid='$pid' sig=$sig"
+	isDebug && printDebug "${FUNCNAME[0]} pid='$pid' sig=$sig"
 	local myChild
 	local mylist="$(ps -o pid --no-headers --ppid ${pid} || : )"
     for myChild in $mylist; do
@@ -424,7 +424,7 @@ readonly -f TTTF_killchilds
 TTTF_killtree() {
     local pid=$1
     local sig=${2:--TERM}
-    isDebug && printDebug "$FUNCNAME pid='$pid' sig=$sig"
+    isDebug && printDebug "${FUNCNAME[0]} pid='$pid' sig=$sig"
     local killOk='true'
     kill -STOP ${pid} 2>/dev/null || killOk='' # needed to stop quickly forking parent
     # print command to be stopped
@@ -456,8 +456,8 @@ readonly -f TTTF_killtree
 #	$7 supressVarName - the name of the supress variable or empty. If var exists and is true, the steps are suppressed
 #	$8 counterName - the name of the counter variable
 TTTF_executeSteps() {
-	isDebug && printDebug "$FUNCNAME $*"
-	[[ $# -eq 8 ]] || printErrorAndExit "$FUNCNAME no params is wrong $#"
+	isDebug && printDebug "${FUNCNAME[0]} $*"
+	[[ $# -eq 8 ]] || printErrorAndExit "${FUNCNAME[0]} no params is wrong $#"
 
 	local -r script="$1"
 	local -r name="$2"
@@ -657,7 +657,7 @@ function TTTF_addCaseEntry {
 			fi;;
 
 		*)
-			printErrorAndExit "Wrong result string $4" $errRt
+			printErrorAndExit "Wrong result string $4" "$errRt"
 	esac
 }
 readonly -f TTTF_addCaseEntry
@@ -691,14 +691,14 @@ readonly -f TTTF_startSuiteList
 # $11 Suites skipped
 # S12 Suites error
 function TTTF_addSuiteEntry {
-	if [[ $# -ne 12 ]]; then printErrorAndExit "wrong no of arguments $#" $errRt; fi
+	if [[ $# -ne 12 ]]; then printErrorAndExit "wrong no of arguments $#" "$errRt"; fi
 	case $3 in
 		0 )
 			echo -n "<li><a href=\"$5/suite.html\"><b>$2</b></a> - ResultCode: $3 - <a href=\"$5\">WorkDir</a> - <a href=\"$4\">InputDir</a>" >> "$1";;
-		$errSkip )
+		"$errSkip" )
 			{ if read -r; then :; fi; } < "$5/REASON" #read one line from reason
 			echo -n "<li style=\"color: blue\"><a href=\"$5/suite.html\"><b>$2</b></a> - ResulCode: $3 SKIP: $REPLY - <a href=\"$5\">WorkDir</a> - <a href=\"$4\">InputDir</a>" >> "$1";;
-		$errSigint )
+		"$errSigint" )
 			echo -n "<li style=\"color: red\"><a href=\"$5/suite.html\"><b>$2</b></a> - ResultCode: $3 SIGINT received - <a href=\"$5\">WorkDir</a> - <a href=\"$4\">InputDir</a>" >> "$1";;
 		* )
 			echo -n "<li style=\"color: red\"><a href=\"$5/suite.html\"><b>$2</b></a> - ResultCode: $3 - <a href=\"$5\">WorkDir</a> - <a href=\"$4\">InputDir</a>" >> "$1"
