@@ -24,7 +24,7 @@ declare TTTI_interruptReceived="" #not used here but required in coreutils
 #	global error exit function - prints the caller stack
 function errorTrapFunc {
 	{
-		echo -e "\033[31mERROR: $FUNCNAME ***************"
+		echo -e "\033[31mERROR: ${FUNCNAME[0]} ***************"
 		local -i i=0;
 		while caller $i; do
 			i=$((i+1))
@@ -56,7 +56,7 @@ if [[ $# -ne 4 ]]; then
 	exit ${errInvocation}
 fi
 #start time
-declare -r TTTT_caseStartTime=$(date -u +%s)
+TTTT_caseStartTime=$(date -u +%s); readonly TTTT_caseStartTime
 #setup case values
 declare -rx TTRO_inputDirCase="$1"; shift
 declare -rx TTRO_workDirCase="$1"; shift
@@ -80,7 +80,7 @@ export TTXX_searchPath
 function caseFinalization {
 	#unset the errtrace too to avoid unnecessary error traps
 	set +o errexit; set +o nounset; set +o errtrace
-	isDebug && printDebug "$FUNCNAME"
+	isDebug && printDebug "${FUNCNAME[0]}"
 	if [[ $TTTT_executionState == 'initializing' ]]; then
 		return 0
 	fi
@@ -100,7 +100,7 @@ function caseFinalization {
 
 function caseExitFunction {
 	set +o errexit; set +o nounset; set +o errtrace
-	printInfo "$FUNCNAME"
+	printInfo "${FUNCNAME[0]}"
 	if ! TTTF_isSkip; then
 		caseFinalization
 	fi
