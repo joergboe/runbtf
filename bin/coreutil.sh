@@ -59,11 +59,10 @@ function TTTF_exeSuite {
 	printInfo "**** START Suite suite='${suite}' variant='$2' in ${suitePath} START ********************"
 	#make and cleanup suite work dir
 	local sworkdir="$TTRO_workDir"
-	if [[ -n $suiteNestingPath ]]; then
-		sworkdir="$sworkdir/$suiteNestingPath"
-	fi
-	if [[ -n $2 ]]; then
-		sworkdir="$sworkdir/$2"
+	if [[ -n $suiteNestingString ]]; then
+		local subst1="${suiteNestingString//:://}"
+		local subst2="${subst1//://}"
+		sworkdir="$sworkdir/$subst2"
 	fi
 	isDebug && printDebug "suite workdir is $sworkdir"
 	if [[ -e $sworkdir ]]; then
