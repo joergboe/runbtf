@@ -69,11 +69,11 @@ else
 fi
 
 if [[ -n $interactive ]]; then
-	while read -pr "Install into directory $destination (yes/no/exit) [y/n/e]"; do
+	while read -r -p "Install into directory $destination (yes/no/exit) [y/n/e]"; do
 		if [[ $REPLY == "y" || $REPLY == "Y" || $REPLY == "yes" ]]; then
 			break
 		elif [[ $REPLY == "n" || $REPLY == "N" || $REPLY == "no" ]]; then
-			read -pr "Enter installation directory:"
+			read -r -p "Enter installation directory:"
 			eval tempdir="$REPLY"
 			if [[ $tempdir != /* ]]; then
 				echo "Use a absolute path not $tempdir"
@@ -85,7 +85,7 @@ if [[ -n $interactive ]]; then
 		fi
 	done
 
-	while read -pr "Install into directory $destination is this correct? (yes/exit) [y/e]"; do
+	while read -r -p "Install into directory $destination is this correct? (yes/exit) [y/e]"; do
 		if [[ $REPLY == "y" || $REPLY == "Y" || $REPLY == "yes" ]]; then
 			break
 		elif [[ $REPLY == "e" || $REPLY == "E" || $REPLY == "exit" ]]; then
